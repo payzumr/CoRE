@@ -175,7 +175,12 @@ main (int argc, char **argv)
 #endif
 		
 		filein = fopen(string,"rb+"); //black 1
-		//strcpy (src_ip, "192.168.0.77");
+#ifdef FRONT
+		strcpy (src_ip, "10.10.1.11");
+#endif
+#ifdef BACK
+		strcpy (src_ip, "10.10.1.12");
+#endif
 		
 		iCount = (iCount + 1) % 91;
  		//get its size

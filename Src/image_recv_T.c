@@ -8,7 +8,6 @@
  */
 
 #include "raspberryView.h"
-#define DEBUG_MSG_HEADER
  
 void printInfos(unsigned char *, int);
  
@@ -127,7 +126,7 @@ void recv_func(gpointer data)
 					}
 				
 				fclose(fp);
-#ifdef DEBUG_MSG_HEADER
+#ifdef DEBUG_MSG
 				printInfos(buffer, data_size);
 #endif	
 			}

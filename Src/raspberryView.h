@@ -15,8 +15,8 @@
 
 #define UDP_PROTO 17
 #define IP_HEADER_MAX 65536
-#define FRONTCAM "127.0.0.1"
-#define BACKCAM "127.0.0.1"
+#define FRONTCAM "10.10.1.11"
+#define BACKCAM "10.10.1.12"
 
 
 
