@@ -11,7 +11,7 @@
  
 void printInfos(unsigned char *, int);
  
-static gpointer thread_func( gpointer data )
+void recv_func(gpointer data)
 {
 	/*
 		Gui Initialisierung
@@ -30,14 +30,21 @@ static gpointer thread_func( gpointer data )
      
     logfile=fopen("log.txt","w");
     if(logfile==NULL) printf("Unable to create file.");
+#ifdef DEBUG_MSG
     printf("Starting...\n");
+#endif
     //Create a raw socket that shall sniff
     sock_raw = socket(AF_INET , SOCK_RAW , IPPROTO_UDP);
     if(sock_raw < 0)
     {
+#ifdef DEBUG_MSG
         printf("Socket Error\n");
-    }else{
+#endif
+    }else
+	{
+#ifdef DEBUG_MSG
 		printf("Socket erstellt\n");
+#endif
 	}
 	
 	//Threads starten 1 gui 2 while(1)
@@ -52,7 +59,9 @@ static gpointer thread_func( gpointer data )
         data_size = recvfrom(sock_raw , buffer , IP_HEADER_MAX , 0 , &saddr , &saddr_size);
         if(data_size <0 )
         {
+#ifdef DEBUG_MSG
             printf("Recvfrom error , failed to get packets\n");
+#endif
         }
 		//printf("Recvfrom: Packet empfangen\n");
         //Now process the packet
@@ -61,10 +70,14 @@ static gpointer thread_func( gpointer data )
 		
 		if(iph->protocol==UDP_PROTO){
 			++udp;
+#ifdef DEBUG_MSG
 			printf("UDP packet received   Count: %d\n", udp);
+#endif
 		
 		}else{
+#ifdef DEBUG_MSG
 			printf("Other Protocol\n");
+#endif
 			break;
 		}
 		
@@ -101,11 +114,10 @@ static gpointer thread_func( gpointer data )
 				
 				}
 				
-		
 			fclose(fp);
-		
-			//printInfos(buffer, data_size);
-		
+#ifdef DEBUG_MSG
+			printInfos(buffer, data_size);
+#endif
 		}
   
     }

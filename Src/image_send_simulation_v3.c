@@ -70,19 +70,16 @@ main (int argc, char **argv)
 	iCount = 0;
 	iGesamt = 0;
 	
+	// Allocate memory for various arrays.
+	buffer = allocate_ustrmem (IP_MAXPACKET);
+	packet = allocate_ustrmem (IP_MAXPACKET);
+	interface = allocate_strmem (40);
+	target = allocate_strmem (40);
+	src_ip = allocate_strmem (INET_ADDRSTRLEN);
+	dst_ip = allocate_strmem (INET_ADDRSTRLEN);
+	ip_flags = allocate_intmem (4);
+	
 	while(1){
-		
-		// Allocate memory for various arrays.
-  		buffer = allocate_ustrmem (IP_MAXPACKET);
-  		packet = allocate_ustrmem (IP_MAXPACKET);
-		interface = allocate_strmem (40);
-  		target = allocate_strmem (40);
-  		src_ip = allocate_strmem (INET_ADDRSTRLEN);
-  		dst_ip = allocate_strmem (INET_ADDRSTRLEN);
-  		ip_flags = allocate_intmem (4);
-
-
-  	
     	
 		// Interface to send packet through.
 		strcpy (interface, "lo");
@@ -103,7 +100,9 @@ main (int argc, char **argv)
     		return (EXIT_FAILURE);
   		}
   		close (sd);
+#ifdef DEBUG_MSG
   		printf ("Index for interface %s is %i\n", interface, ifr.ifr_ifindex);
+#endif
 
   		// Source IPv4 address: you need to fill this out
   		//strcpy (src_ip, "127.0.0.1");
@@ -131,10 +130,11 @@ main (int argc, char **argv)
   		}
   		freeaddrinfo (res);
 		
-		
+#ifdef DEBUG_MSG
 		iGesamt++;
 		printf("iGesamt = %d\n", iGesamt);
 		printf("iCount = %d\n", iCount);
+#endif
 		// switch(iCount){
 			// case 0:
 			// filein = fopen("image.jpg","rb+"); //black 1
@@ -164,10 +164,15 @@ main (int argc, char **argv)
 				
 				
 		// }
+#ifdef DEBUG_MSG
 		printf("string = %s\n", string);
 		printf("string = %d\n", sizeof(string));
+#endif
 		sprintf(string, "./lache/img%02d.jpg", iCount+1);
+		
+#ifdef DEBUG_MSG
 		printf("string = %s\n", string);
+#endif
 		
 		filein = fopen(string,"rb+"); //black 1
 		strcpy (src_ip, "192.168.0.77");
@@ -184,10 +189,15 @@ main (int argc, char **argv)
  		//read image data into buffer
  		fread (buffer,1,lSize,filein);
   
- 		if(lSize > 65000){
+ 		if(lSize > 65000)
+		{
+#ifdef DEBUG_MSG
 	 		printf("Error File zu groß!!!");
+#endif
  		}
+#ifdef DEBUG_MSG		
  		printf("Bildgroeße: %d\n", lSize); 
+#endif
 		
 		fclose(filein);
 
@@ -308,21 +318,19 @@ main (int argc, char **argv)
 
  	 	// Close socket descriptor.
   		close (sd);
-
-  		// Free allocated memory.
-  		free (buffer);
-  		free (packet);
-  		free (interface);
-  		free (target);
-  		free (src_ip);
-  		free (dst_ip);
-  		free (ip_flags);
 		
 		usleep(40000);
 	}
-  
+
+	// Free allocated memory.
+  	free (buffer);
+  	free (packet);
+  	free (interface);
+  	free (target);
+  	free (src_ip);
+  	free (dst_ip);
+  	free (ip_flags);
 	
-  printf("Sendto ready\n");
   return (EXIT_SUCCESS);
 }
 

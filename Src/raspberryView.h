@@ -19,4 +19,6 @@
 
 extern GtkWidget *image;
 
+void recv_func(gpointer data);
+
 //extern static gpointer thread_func( gpointer data );
