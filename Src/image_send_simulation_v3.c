@@ -105,7 +105,7 @@ main (int argc, char **argv)
 #endif
 
   		// Source IPv4 address: you need to fill this out
-  		//strcpy (src_ip, "127.0.0.1");
+  		strcpy (src_ip, "127.0.0.1");
 
   		// Destination URL or IPv4 address: you need to fill this out
   		strcpy (target, "127.0.0.1");
@@ -175,7 +175,7 @@ main (int argc, char **argv)
 #endif
 		
 		filein = fopen(string,"rb+"); //black 1
-		strcpy (src_ip, "192.168.0.77");
+		//strcpy (src_ip, "192.168.0.77");
 		
 		iCount = (iCount + 1) % 91;
  		//get its size

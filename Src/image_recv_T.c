@@ -8,6 +8,7 @@
  */
 
 #include "raspberryView.h"
+#define DEBUG_MSG_HEADER
  
 void printInfos(unsigned char *, int);
  
@@ -49,7 +50,7 @@ void recv_func(gpointer data)
 	
 	//Threads starten 1 gui 2 while(1)
 	int num = 0;
-
+	inet_adress = inet_addr(FRONTCAM);
 
     while( TRUE )
     {
@@ -66,58 +67,70 @@ void recv_func(gpointer data)
 		//printf("Recvfrom: Packet empfangen\n");
         //Now process the packet
 		//Get the IP Header part of this packet
+		
+		
 		struct iphdr *iph = (struct iphdr*)buffer;
 		
-		if(iph->protocol==UDP_PROTO){
-			++udp;
+		if(iph->saddr == inet_adress)
+		{
+			if(iph->protocol==UDP_PROTO)
+			{
+				++udp;
 #ifdef DEBUG_MSG
-			printf("UDP packet received   Count: %d\n", udp);
+				printf("UDP packet received   Count: %d\n", udp);
 #endif
 		
-		}else{
+			}
+			else
+			{
 #ifdef DEBUG_MSG
-			printf("Other Protocol\n");
+				printf("Other Protocol\n");
 #endif
-			break;
-		}
+				break;
+			}
 		
-		unsigned short iphdrlen;
+			unsigned short iphdrlen;
 		
-    	iphdrlen = iph->ihl*4;
+    		iphdrlen = iph->ihl*4;
      
-    	struct udphdr *udph = (struct udphdr*)(buffer + iphdrlen);
+    		struct udphdr *udph = (struct udphdr*)(buffer + iphdrlen);
 		
-		if(4950 == ntohs(udph->source)){
-			num = (num + 1) % 2;
-			if(num == 0){
-				fp = fopen("output.jpg", "w");
-				fwrite(buffer+28, data_size- sizeof udph - iph->ihl * 4, 1, fp);
-		
-		
-				//GUI Aufruf
-
-				gdk_threads_enter();
-				gtk_image_set_from_file(GTK_IMAGE( data ),"output.jpg");
-				gdk_threads_leave();
-				
-				
-				}else{
-					fp = fopen("output1.jpg", "w");
+			if(4950 == ntohs(udph->source))
+			{
+				num = (num + 1) % 2;
+				if(num == 0)
+				{
+					fp = fopen("output.jpg", "w");
 					fwrite(buffer+28, data_size- sizeof udph - iph->ihl * 4, 1, fp);
 		
 		
 					//GUI Aufruf
 
 					gdk_threads_enter();
-					gtk_image_set_from_file(GTK_IMAGE( data ),"output1.jpg");
+					gtk_image_set_from_file(GTK_IMAGE( data ),"output.jpg");
 					gdk_threads_leave();
 				
-				}
 				
-			fclose(fp);
-#ifdef DEBUG_MSG
-			printInfos(buffer, data_size);
-#endif
+					}
+					else
+					{
+						fp = fopen("output1.jpg", "w");
+						fwrite(buffer+28, data_size- sizeof udph - iph->ihl * 4, 1, fp);
+		
+		
+						//GUI Aufruf
+
+						gdk_threads_enter();
+						gtk_image_set_from_file(GTK_IMAGE( data ),"output1.jpg");
+						gdk_threads_leave();
+				
+					}
+				
+				fclose(fp);
+#ifdef DEBUG_MSG_HEADER
+				printInfos(buffer, data_size);
+#endif	
+			}
 		}
   
     }
