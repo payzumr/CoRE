@@ -7,8 +7,6 @@
 #include <netinet/ip.h>    //Provides declarations for ip header
 #include <sys/socket.h>
 #include <arpa/inet.h>
-
-#include <pthread.h>
 #include <errno.h>
 
 #include <gtk/gtk.h>
@@ -25,4 +23,3 @@ int inet_adress;
 
 void recv_func(gpointer data);
 
-//extern static gpointer thread_func( gpointer data );

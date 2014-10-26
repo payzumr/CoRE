@@ -1,9 +1,5 @@
 #include "raspberryView.h"
 
-#define THREADE(returnVal, text) if((returnVal) != 0) { errno = returnVal; perror(text);}
-
-  	pthread_t dummy;
-
   	GtkWidget *win;
   	GtkWidget *image;
   	GtkWidget *align;
@@ -24,6 +20,7 @@
 static gpointer thread_func( gpointer data )
 {
 	recv_func(data);
+	return NULL;
 } 
 
 		    
@@ -65,7 +62,7 @@ static void initWindow(){
 
 static void initWidgets(){
  
-  	image = g_object_new(GTK_TYPE_IMAGE,"file","output.jpg",NULL);
+  	image = g_object_new(GTK_TYPE_IMAGE,"file","norecv.jpg",NULL);
   	align = gtk_alignment_new(1,0,0,0);
   	vbox = gtk_vbox_new(FALSE,3);
   	hbox = gtk_hbox_new(FALSE,3);
@@ -82,9 +79,9 @@ static void initWidgets(){
 	
 int main(int argc, char *argv[]){
 	
-	/* Secure glib */
-    if( ! g_thread_supported() )
-        g_thread_init( NULL );
+	// /* Secure glib */
+     // if( ! g_thread_supported() )
+         // g_thread_init( NULL );
 		
 	/* Secure gtk */
     gdk_threads_init();
@@ -117,7 +114,8 @@ int main(int argc, char *argv[]){
   	gtk_container_add(GTK_CONTAINER(win),vbox);
   
   	/* Create new thread */
-    thread = g_thread_create( thread_func, (gpointer)image, FALSE, &error );
+    //thread = g_thread_create( thread_func, (gpointer)image, FALSE, &error );
+	thread = g_thread_new("recv", thread_func, (gpointer)image);
 							  
 	if( ! thread )
     {

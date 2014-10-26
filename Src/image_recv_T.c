@@ -19,11 +19,9 @@ void recv_func(gpointer data)
 	*/
 	int sock_raw;
 	FILE *logfile;
-	int udp=0,others=0,i,j;
-	struct sockaddr_in source,dest;
+	int udp=0;
     int saddr_size , data_size;
     struct sockaddr saddr;
-    struct in_addr in;
 	FILE *fp;
      
     unsigned char *buffer = (unsigned char *)malloc(IP_HEADER_MAX); //Its Big!
@@ -47,8 +45,6 @@ void recv_func(gpointer data)
 #endif
 	}
 	
-	//Threads starten 1 gui 2 while(1)
-	int num = 0;
 	inet_adress = inet_addr(FRONTCAM);
 
     while( TRUE )
@@ -56,19 +52,31 @@ void recv_func(gpointer data)
         
 		saddr_size = sizeof saddr;
         //Receive a packet
-        data_size = recvfrom(sock_raw , buffer , IP_HEADER_MAX , 0 , &saddr , &saddr_size);
+        data_size = recvfrom(sock_raw , buffer , IP_HEADER_MAX , 0 , &saddr ,(socklen_t *) &saddr_size);
         if(data_size <0 )
         {
 #ifdef DEBUG_MSG
             printf("Recvfrom error , failed to get packets\n");
 #endif
-        }
+        }else{
+			printf("Packet empfangen\n");
+		}
 		//printf("Recvfrom: Packet empfangen\n");
         //Now process the packet
 		//Get the IP Header part of this packet
 		
 		
 		struct iphdr *iph = (struct iphdr*)buffer;
+		
+		if((ntohs(iph->frag_off) & 0x3fff) == 0){
+			printf("Erste 3 Bits des IP Offset sind 000 \n");
+		}else{
+			printf("Erste 3 Bits des IP Offset sind NICHT 000 \n");
+		}
+		
+		
+		
+		//fprintf("IP Offset   : %d\n",(unsigned int)iphdr->ip_off);
 		
 		if(iph->saddr == inet_adress)
 		{
@@ -96,34 +104,13 @@ void recv_func(gpointer data)
 		
 			if(4950 == ntohs(udph->source))
 			{
-				num = (num + 1) % 2;
-				if(num == 0)
-				{
-					fp = fopen("output.jpg", "w");
-					fwrite(buffer+28, data_size- sizeof udph - iph->ihl * 4, 1, fp);
-		
-		
-					//GUI Aufruf
-
-					gdk_threads_enter();
-					gtk_image_set_from_file(GTK_IMAGE( data ),"output.jpg");
-					gdk_threads_leave();
+				fp = fopen("output.jpg", "w");
+				fwrite(buffer+28, data_size- sizeof udph - iph->ihl * 4, 1, fp);
 				
-				
-					}
-					else
-					{
-						fp = fopen("output1.jpg", "w");
-						fwrite(buffer+28, data_size- sizeof udph - iph->ihl * 4, 1, fp);
-		
-		
-						//GUI Aufruf
-
-						gdk_threads_enter();
-						gtk_image_set_from_file(GTK_IMAGE( data ),"output1.jpg");
-						gdk_threads_leave();
-				
-					}
+				//GUI Aufruf
+				gdk_threads_enter();
+				gtk_image_set_from_file(GTK_IMAGE( data ),"output.jpg");
+				gdk_threads_leave();
 				
 				fclose(fp);
 #ifdef DEBUG_MSG
@@ -136,8 +123,6 @@ void recv_func(gpointer data)
 	
 	close(sock_raw);
     printf("Finished");
-
-    return( NULL );
 }
 
 void printInfos(unsigned char *Buffer , int Size){

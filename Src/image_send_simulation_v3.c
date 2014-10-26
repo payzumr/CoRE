@@ -121,11 +121,9 @@ main (int argc, char **argv)
 		// Report source MAC address to stdout.
 #ifdef DEBUG_MSG
   		printf ("MAC address for interface %s is ", interface);
-#endif
   		for (i=0; i<5; i++) {
     		printf ("%02x:", src_mac[i]);
   		}
-#ifdef DEBUG_MSG
   		printf ("%02x\n", src_mac[5]);
 #endif
 
@@ -152,7 +150,7 @@ main (int argc, char **argv)
   		strcpy (src_ip, "10.10.1.11");
 
   		// Destination URL or IPv4 address
-  		strcpy (target, "10.10.1.100");
+  		strcpy (target, "127.0.0.1");
 
   		// Fill out hints for getaddrinfo().
   		memset (&hints, 0, sizeof (struct addrinfo));
@@ -181,7 +179,7 @@ main (int argc, char **argv)
 
   		// Get UDP data.
 		
-		sprintf(string, ".lache/img%02d.jpg", iCount +1)
+		sprintf(string, "./lache/img%02d.jpg", iCount +1);
 			
 #ifdef FRONT
 		strcpy (src_ip, "10.10.1.11");
