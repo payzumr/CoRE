@@ -22,6 +22,7 @@ typedef struct _widgetStruct {
 MyWidgets myWidgets;
 GThread   *thread;
 GError    *error = NULL;
+GdkPixbuf * pixbuf;
 
 static gpointer thread_func( gpointer data )
 {
@@ -42,9 +43,28 @@ void event_box_button_press(GtkWidget *widget,
   
   
   switch(number){
-    case BILD_1: gtk_image_set_from_file(image,"auto2.jpg"); number = 1;
+    case BILD_1:
+	
+	pixbuf = gdk_pixbuf_new_from_file_at_scale   ("auto3.jpg",
+                                                         320,
+                                                         240,
+                                                         FALSE,
+                                                         &error);
+														 
+	gtk_image_set_from_pixbuf (image, pixbuf);
+	//gtk_image_set_from_file(image,"auto3.jpg");
+	number = 1;
       break;
-    case BILD_2: gtk_image_set_from_file(image,"auto1.jpg"); number = 0;
+    case BILD_2:
+	pixbuf = gdk_pixbuf_new_from_file_at_scale   ("auto1.jpg",
+                                                         320,
+                                                         240,
+                                                         FALSE,
+                                                         &error);
+														 
+	gtk_image_set_from_pixbuf (image, pixbuf);
+	//gtk_image_set_from_file(image,"auto1.jpg");
+	number = 0;
       break;
     default: g_print("Sorry no image \n");
     
@@ -59,15 +79,17 @@ void event_image_reload(GtkImage *image,gchar *f){
 void init_widgets(MyWidgets *wi) {
   
     wi->window = gtk_window_new(GTK_WINDOW_TOPLEVEL); 
-    gtk_window_set_title(GTK_WINDOW(wi->window),"Kamera"); 
+    //gtk_window_set_title(GTK_WINDOW(wi->window),"Kamera");
+	gtk_window_set_default_size(GTK_WINDOW(wi->window),320,240);
     gtk_window_set_resizable(GTK_WINDOW(wi->window),FALSE);
-    gtk_window_set_position(GTK_WINDOW(wi->window),GTK_WIN_POS_CENTER);
-    gtk_widget_set_size_request(wi->window,320,240);
+    //gtk_window_set_position(GTK_WINDOW(wi->window),GTK_WIN_POS_CENTER);
+    //gtk_widget_set_size_request(wi->window,320,240);
     
     wi->image = gtk_image_new_from_file("norecv.jpg");
 
     wi->event_box = gtk_event_box_new();
     gtk_widget_set_size_request(wi->event_box,320,240);
+	gtk_window_fullscreen(GTK_WINDOW(wi->window));
 }
 
 
