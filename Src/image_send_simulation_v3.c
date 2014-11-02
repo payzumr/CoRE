@@ -387,7 +387,9 @@ main (int argc, char **argv)
                         		+ (ip_flags[1] << 14)
                         		+ (ip_flags[2] << 13)
                         		+  ip_flags[3]);
-
+			
+			printf("IP Offsetfeld   : %d\n",ntohs(iphdr.ip_off));
+			
     		// IPv4 header checksum (16 bits)
     		iphdr.ip_sum = 0;
     		iphdr.ip_sum = checksum ((uint16_t *) &iphdr, IP4_HDRLEN);

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><project name="CoRE" company="HAW Hamburg" webLink="http://" view-date="2014-09-15" view-index="0" gantt-divider-location="353" resource-divider-location="385" version="2.0" locale="de_DE">
+<?xml version="1.0" encoding="UTF-8"?><project name="CoRE" company="HAW Hamburg" webLink="http://" view-date="2014-09-15" view-index="0" gantt-divider-location="353" resource-divider-location="385" version="2.0" locale="de">
     <description/>
     <view zooming-state="default:4" id="gantt-chart">
         <field id="tpd3" name="Vorgang" width="56" order="0"/>
@@ -8,8 +8,8 @@
         <option id="taskLabelDown" value="length"/>
     </view>
     <view id="resource-table">
-        <field id="0" name="Ressource" width="54" order="0"/>
-        <field id="1" name="Rolle" width="45" order="1"/>
+        <field id="0" name="Ressource" width="50" order="0"/>
+        <field id="1" name="Rolle" width="49" order="1"/>
     </view>
     <!-- -->
     <calendars>
@@ -80,46 +80,46 @@
         <task id="2" name="Wireshark Ethernetlog" color="#8cb6ce" meeting="false" start="2014-09-29" duration="1" complete="0" thirdDate="2014-09-29" thirdDate-constraint="1" expand="true">
             <depend id="0" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="0" name="Erstellung Gantdiagramm" color="#8cb6ce" meeting="false" start="2014-10-06" duration="1" complete="0" thirdDate="2014-10-06" thirdDate-constraint="1" expand="true"/>
-        <task id="65" name="Erste Versuche GUI anzuzeigen" color="#8cb6ce" meeting="false" start="2014-10-06" duration="5" complete="0" expand="true">
+        <task id="0" name="Erstellung Gantdiagramm" color="#8cb6ce" meeting="false" start="2014-09-30" duration="1" complete="100" expand="true"/>
+        <task id="65" name="Erste Versuche GUI anzuzeigen" color="#8cb6ce" meeting="false" start="2014-09-29" duration="4" complete="100" expand="true">
             <depend id="76" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="76" name="GUI Touchreaktion" color="#8cb6ce" meeting="false" start="2014-10-13" duration="5" complete="0" expand="true">
+        <task id="76" name="GUI Touchreaktion" color="#8cb6ce" meeting="false" start="2014-10-06" duration="5" complete="100" expand="true">
             <depend id="83" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="83" name="GUI Bildanzeigen" color="#8cb6ce" meeting="false" start="2014-10-20" duration="1" complete="0" expand="true">
+        <task id="83" name="GUI Bildanzeigen" color="#8cb6ce" meeting="false" start="2014-10-13" duration="1" complete="100" expand="true">
             <depend id="69" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="35" name="Erste Tests mit geliehenem Raspberry" color="#8cb6ce" meeting="false" start="2014-09-29" duration="4" complete="0" thirdDate="2014-09-29" thirdDate-constraint="1" expand="true">
+        <task id="35" name="Erste Tests mit geliehenem Raspberry" color="#8cb6ce" meeting="false" start="2014-09-23" duration="4" complete="100" expand="true">
             <depend id="46" type="2" difference="0" hardness="Strong"/>
             <depend id="65" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="46" name="C Prog erstellen" color="#8cb6ce" meeting="false" start="2014-10-06" duration="1" complete="0" thirdDate="2014-10-06" thirdDate-constraint="1" expand="true">
+        <task id="46" name="C Prog erstellen" color="#8cb6ce" meeting="false" start="2014-09-29" duration="1" complete="100" expand="true">
             <depend id="48" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="48" name="Socket erstellen" color="#8cb6ce" meeting="false" start="2014-10-07" duration="1" complete="0" expand="true">
+        <task id="48" name="Socket erstellen" color="#8cb6ce" meeting="false" start="2014-09-30" duration="1" complete="100" expand="true">
             <depend id="49" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="49" name="Auf IP-Protokoll reagieren" color="#8cb6ce" meeting="false" start="2014-10-08" duration="1" complete="0" expand="true">
+        <task id="49" name="Auf IP-Protokoll reagieren" color="#8cb6ce" meeting="false" start="2014-10-01" duration="1" complete="0" expand="true">
             <depend id="56" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="56" name="MAC-Adresse auswerten" color="#8cb6ce" meeting="false" start="2014-10-09" duration="1" complete="0" expand="true">
+        <task id="56" name="IP-Adresse auswerten" color="#8cb6ce" meeting="false" start="2014-10-02" duration="1" complete="0" expand="true">
             <depend id="60" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="60" name="Bild skalieren" color="#8cb6ce" meeting="false" start="2014-10-10" duration="1" complete="0" expand="true">
+        <task id="60" name="Bild skalieren" color="#8cb6ce" meeting="false" start="2014-10-06" duration="1" complete="0" expand="true">
             <depend id="59" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="59" name="Bild speichern / anzeigen" color="#8cb6ce" meeting="false" start="2014-10-13" duration="1" complete="0" expand="true">
+        <task id="59" name="Bild speichern / anzeigen" color="#8cb6ce" meeting="false" start="2014-10-07" duration="1" complete="0" expand="true">
             <depend id="69" type="2" difference="0" hardness="Strong"/>
             <depend id="83" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="69" name="Implementation auf Raspberry" color="#8cb6ce" meeting="false" start="2014-10-21" duration="4" complete="0" expand="true">
+        <task id="69" name="Implementation auf Raspberry" color="#8cb6ce" meeting="false" start="2014-10-14" duration="4" complete="0" expand="true">
             <depend id="91" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="91" name="Testen" color="#8cb6ce" meeting="false" start="2014-10-27" duration="10" complete="0" expand="true">
+        <task id="91" name="Testen" color="#8cb6ce" meeting="false" start="2014-10-20" duration="10" complete="0" expand="true">
             <depend id="94" type="2" difference="0" hardness="Strong"/>
         </task>
-        <task id="94" name="Dokumentation schreiben" color="#8cb6ce" meeting="false" start="2014-11-11" duration="5" complete="0" expand="true"/>
+        <task id="94" name="Dokumentation schreiben" color="#8cb6ce" meeting="false" start="2014-11-04" duration="5" complete="0" expand="true"/>
     </tasks>
     <resources>
         <resource id="3" name="Patrick Kuncke" function="Default:1" contacts="" phone=""/>

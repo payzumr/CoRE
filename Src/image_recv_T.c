@@ -32,7 +32,7 @@ void recv_func(gpointer data)
     printf("Starting...\n");
 #endif
     //Create a raw socket that shall sniff
-    sock_raw = socket(AF_INET , SOCK_RAW , IPPROTO_UDP);
+    sock_raw = socket(PF_PACKET , SOCK_RAW , htons (ETH_P_ALL));
     if(sock_raw < 0)
     {
 #ifdef DEBUG_MSG
@@ -59,7 +59,9 @@ void recv_func(gpointer data)
             printf("Recvfrom error , failed to get packets\n");
 #endif
         }else{
+#ifdef DEBUG_MSG
 			printf("Packet empfangen\n");
+#endif
 		}
 		//printf("Recvfrom: Packet empfangen\n");
         //Now process the packet
@@ -68,18 +70,18 @@ void recv_func(gpointer data)
 		
 		struct iphdr *iph = (struct iphdr*)buffer;
 		
-		if((ntohs(iph->frag_off) & 0x3fff) == 0){
-			printf("Erste 3 Bits des IP Offset sind 000 \n");
-		}else{
-			printf("Erste 3 Bits des IP Offset sind NICHT 000 \n");
-		}
-		
-		
-		
-		//fprintf("IP Offset   : %d\n",(unsigned int)iphdr->ip_off);
 		
 		if(iph->saddr == inet_adress)
 		{
+			if((ntohs(iph->frag_off) & 0x1fff) == 0){
+				printf("Erste 3 Bits des IP Offset sind 000 \n");
+			}else{
+				printf("Erste 3 Bits des IP Offset sind NICHT 000 \n");
+			}
+		
+			printf("IP Offset   : %d\n",ntohs(iph->frag_off));
+		
+		
 			if(iph->protocol==UDP_PROTO)
 			{
 				++udp;
