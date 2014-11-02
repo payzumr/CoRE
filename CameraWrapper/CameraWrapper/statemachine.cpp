@@ -195,6 +195,7 @@ void Statemachine::run()
                 usFragmentOffset = usFragmentOffset + (MTU_SIZE / 8);
             }
             ptIh->iph_offset |= usFragmentOffset;
+			
             // write data
             memcpy((void*)data, (void*)(datagram + (DATAGRAM_SIZE - (usBytesToSend + usEtherSize))), usEtherSize);
             // send RAW Ethernet frame

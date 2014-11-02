@@ -89,7 +89,7 @@ void init_widgets(MyWidgets *wi) {
 
     wi->event_box = gtk_event_box_new();
     gtk_widget_set_size_request(wi->event_box,320,240);
-	gtk_window_fullscreen(GTK_WINDOW(wi->window));
+	//gtk_window_fullscreen(GTK_WINDOW(wi->window));
 }
 
 
@@ -100,7 +100,7 @@ void create_signals(MyWidgets *wi) {
        G_CALLBACK(event_window_destroy),
        NULL);
 
-    g_signal_connect(wi->event_box,
+		g_signal_connect(wi->event_box,
        "button-press-event",
        G_CALLBACK(event_box_button_press),
        GTK_IMAGE(wi-> image ));

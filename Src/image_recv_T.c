@@ -7,6 +7,8 @@
  *  Version 1.0
  */
 
+#define DEBUG_MSG
+ 
 #include "raspberryView.h"
  
 void printInfos(unsigned char *, int);
@@ -32,7 +34,8 @@ void recv_func(gpointer data)
     printf("Starting...\n");
 #endif
     //Create a raw socket that shall sniff
-    sock_raw = socket(PF_PACKET , SOCK_RAW , htons (ETH_P_ALL));
+    sock_raw = socket(AF_PACKET , SOCK_RAW , htons (ETH_P_ALL));
+	//sock_raw = socket(PF_PACKET, SOCK_RAW, IPPROTO_RAW);
     if(sock_raw < 0)
     {
 #ifdef DEBUG_MSG
@@ -49,10 +52,15 @@ void recv_func(gpointer data)
 
     while( TRUE )
     {
-        
 		saddr_size = sizeof saddr;
         //Receive a packet
         data_size = recvfrom(sock_raw , buffer , IP_HEADER_MAX , 0 , &saddr ,(socklen_t *) &saddr_size);
+		
+		
+		//struct iphdr *iph = (struct iphdr*)buffer;
+		//WICHTIG! Wegen Ethernet Header den wir mit Sniffen!
+		struct iphdr *iph = (struct iphdr*)(buffer + sizeof(struct ethhdr));
+		
         if(data_size <0 )
         {
 #ifdef DEBUG_MSG
@@ -60,7 +68,14 @@ void recv_func(gpointer data)
 #endif
         }else{
 #ifdef DEBUG_MSG
-			printf("Packet empfangen\n");
+			
+			//printf("Packet empfangen von %pI4\n",&iph->saddr );
+    
+			struct sockaddr_in source;	
+			memset(&source, 0, sizeof(source));
+			source.sin_addr.s_addr = iph->saddr;
+			printf("Packet empfangen von %s\n",inet_ntoa(source.sin_addr));
+     
 #endif
 		}
 		//printf("Recvfrom: Packet empfangen\n");
@@ -68,20 +83,24 @@ void recv_func(gpointer data)
 		//Get the IP Header part of this packet
 		
 		
-		struct iphdr *iph = (struct iphdr*)buffer;
 		
-		
+		//printf("Adresse korrekt?: %d\n",(iph->saddr == inet_adress));
 		if(iph->saddr == inet_adress)
-		{
+		{	
+			printf("IP Offset   : %d\n",ntohs(iph->frag_off));
+			
+			//Empfangen bis more fragments auf 000
 			if((ntohs(iph->frag_off) & 0x1fff) == 0){
 				printf("Erste 3 Bits des IP Offset sind 000 \n");
+				printf("IP Offset   : %d\n",(ntohs(iph->frag_off) & 0x1fff));
 			}else{
 				printf("Erste 3 Bits des IP Offset sind NICHT 000 \n");
+				printf("IP Offset Morefragments Bit   : %d\n",(ntohs(iph->frag_off) & 0x1fff));
 			}
 		
-			printf("IP Offset   : %d\n",ntohs(iph->frag_off));
+			
 		
-		
+			//können nicht auf UDP Prüfen da es als IP Header geschickt wird (Protocol 0)
 			if(iph->protocol==UDP_PROTO)
 			{
 				++udp;

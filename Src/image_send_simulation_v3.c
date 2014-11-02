@@ -90,7 +90,7 @@ main (int argc, char **argv)
   		strcpy (interface, "eth0");
 
   		// Submit request for a socket descriptor to look up interface.
-  		if ((sd = socket (PF_PACKET, SOCK_RAW, htons (ETH_P_ALL))) < 0) {
+  		if ((sd = socket (AF_PACKET, SOCK_RAW, htons(ETH_P_ALL))) < 0) {
     		perror ("socket() failed to get socket descriptor for using ioctl() ");
     		exit (EXIT_FAILURE);
   		}

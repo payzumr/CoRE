@@ -26,8 +26,8 @@ void ethernet_prepareHeader(struct ethhdr* eh, struct sockaddr_ll* socket_addres
 
 void ip_prepareHeader(ip_header* ih)
 {
-    const char* ipSrc = "192.168.0.100";
-    const char* ipDest = "192.168.0.12";
+    const char* ipSrc = "10.10.1.11";
+    const char* ipDest = "10.10.1.100";
     static quint16 usIdentifier = 54321;
 
     // create the IP header
@@ -52,6 +52,7 @@ void ip_setMoreFragments(ip_header* ih, bool moreFragments)
     if (moreFragments == true)
         ih->iph_offset |= FLAG_MF;
     else
+		
         ih->iph_offset &= ~FLAG_MF;
 }
 
