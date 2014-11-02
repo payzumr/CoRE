@@ -17,6 +17,8 @@
 
 #include <errno.h>
 
+//-----include von Paddy und Phil
+#include <stdio.h>
 // --------------------------------------------------public----------------------------------------
 Statemachine::Statemachine(Arguments *arguments) :
     QThread()
@@ -118,7 +120,7 @@ void Statemachine::run()
     quint8* etherhead = (quint8*)etherFrame;
     quint8* iphead = (quint8*)etherFrame + ETH_HEADER_LEN;
     quint8* data = (quint8*)etherFrame + ETH_HEADER_LEN + IP_HEADER_LEN;
-	char string[17] = "./lache/img00.jpg";
+	char string[18] = "./lache/img00.jpg";
 	FILE *fi;
     // header structure
     //struct ethhdr *eh = (struct ethhdr*)etherhead;
@@ -137,6 +139,9 @@ void Statemachine::run()
     // prepare ethernet header structures
     ethernet_prepareHeader(&eh, &socket_address);
     socket_address.sll_ifindex = ucInterfaceIndex;
+	
+	int iCount;
+	iCount = 0;
 
     while (true)
     {
