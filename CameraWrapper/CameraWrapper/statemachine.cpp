@@ -157,15 +157,15 @@ void Statemachine::run()
     		exit (EXIT_FAILURE);
   		}
   		
-				iCount = (iCount + 1) % 91;
+		iCount = (iCount + 1) % 91;
  		//get its size
 		fseek(fi, 0, SEEK_END);
 		imageLength = ftell(fi);
-
+		rewind(fi);
+				
  		//read image data into buffer
- 		fread ((quint8*)videoData,1,imageLength,fi);
-		
-		
+		fread ((quint8*)videoData,1,imageLength,fi);
+
   		fclose (fi);
 		
 		
@@ -197,7 +197,8 @@ void Statemachine::run()
             ptIh->iph_offset |= usFragmentOffset;
 			
             // write data
-            memcpy((void*)data, (void*)(datagram + (DATAGRAM_SIZE - (usBytesToSend + usEtherSize))), usEtherSize);
+            memcpy((void*)data, (void*)(datagram + (imageLength - (usBytesToSend +usEtherSize))), usEtherSize);
+			
             // send RAW Ethernet frame
             send_result = sendto(sd, etherFrame, usEtherSize + ETH_HEADER_LEN + IP_HEADER_LEN, 0, (struct sockaddr*)&socket_address, (socklen_t)sizeof(socket_address));
             if (send_result == -1)

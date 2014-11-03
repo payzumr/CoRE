@@ -19,14 +19,19 @@ void recv_func(gpointer data)
 		Gui Initialisierung
 		
 	*/
+	
 	int sock_raw;
 	FILE *logfile;
-	int udp=0;
+	int index=0;
     int saddr_size , data_size;
     struct sockaddr saddr;
 	FILE *fp;
-     
-    unsigned char *buffer = (unsigned char *)malloc(IP_HEADER_MAX); //Its Big!
+	GdkPixbuf * pixbuf;
+	GError    *error = NULL;
+    
+	unsigned char *rcbuffer = (unsigned char *)malloc(MTU); //1514
+    unsigned char *buffer = (unsigned char *)malloc(IMG_MAX); //Its Big! 30000
+	
      
     logfile=fopen("log.txt","w");
     if(logfile==NULL) printf("Unable to create file.");
@@ -35,7 +40,7 @@ void recv_func(gpointer data)
 #endif
     //Create a raw socket that shall sniff
     sock_raw = socket(AF_PACKET , SOCK_RAW , htons (ETH_P_ALL));
-	//sock_raw = socket(PF_PACKET, SOCK_RAW, IPPROTO_RAW);
+	
     if(sock_raw < 0)
     {
 #ifdef DEBUG_MSG
@@ -54,12 +59,9 @@ void recv_func(gpointer data)
     {
 		saddr_size = sizeof saddr;
         //Receive a packet
-        data_size = recvfrom(sock_raw , buffer , IP_HEADER_MAX , 0 , &saddr ,(socklen_t *) &saddr_size);
-		
-		
-		//struct iphdr *iph = (struct iphdr*)buffer;
+        data_size = recvfrom(sock_raw , rcbuffer , MTU , 0 , &saddr ,(socklen_t *) &saddr_size);
 		//WICHTIG! Wegen Ethernet Header den wir mit Sniffen!
-		struct iphdr *iph = (struct iphdr*)(buffer + sizeof(struct ethhdr));
+		struct iphdr *iph = (struct iphdr*)(rcbuffer + sizeof(struct ethhdr));
 		
         if(data_size <0 )
         {
@@ -68,76 +70,92 @@ void recv_func(gpointer data)
 #endif
         }else{
 #ifdef DEBUG_MSG
-			
-			//printf("Packet empfangen von %pI4\n",&iph->saddr );
-    
 			struct sockaddr_in source;	
 			memset(&source, 0, sizeof(source));
 			source.sin_addr.s_addr = iph->saddr;
 			printf("Packet empfangen von %s\n",inet_ntoa(source.sin_addr));
-     
 #endif
 		}
-		//printf("Recvfrom: Packet empfangen\n");
         //Now process the packet
 		//Get the IP Header part of this packet
-		
-		
-		
-		//printf("Adresse korrekt?: %d\n",(iph->saddr == inet_adress));
+	
 		if(iph->saddr == inet_adress)
 		{	
+			#ifdef DEBUG_MSG
 			printf("IP Offset   : %d\n",ntohs(iph->frag_off));
+			#endif
 			
-			//Empfangen bis more fragments auf 000
+			//Einziges oder letztes Paket
 			if((ntohs(iph->frag_off) & 0x1fff) == 0){
+				#ifdef DEBUG_MSG
 				printf("Erste 3 Bits des IP Offset sind 000 \n");
-				printf("IP Offset   : %d\n",(ntohs(iph->frag_off) & 0x1fff));
-			}else{
-				printf("Erste 3 Bits des IP Offset sind NICHT 000 \n");
-				printf("IP Offset Morefragments Bit   : %d\n",(ntohs(iph->frag_off) & 0x1fff));
-			}
-		
-			
-		
-			//können nicht auf UDP Prüfen da es als IP Header geschickt wird (Protocol 0)
-			if(iph->protocol==UDP_PROTO)
-			{
-				++udp;
-#ifdef DEBUG_MSG
-				printf("UDP packet received   Count: %d\n", udp);
-#endif
-		
-			}
-			else
-			{
-#ifdef DEBUG_MSG
-				printf("Other Protocol\n");
-#endif
-				break;
-			}
-		
-			unsigned short iphdrlen;
-		
-    		iphdrlen = iph->ihl*4;
-     
-    		struct udphdr *udph = (struct udphdr*)(buffer + iphdrlen);
-		
-			if(4950 == ntohs(udph->source))
-			{
+				printf("IP Offset Flags: %d\n",(ntohs(iph->frag_off) & 0x1fff));
+				
+				printf("IF IP Packet Size: %d\n", data_size);
+				#endif
+				
+				memcpy(buffer+index, rcbuffer+IP_HEADER+ETHERNET_HEADER , data_size-IP_HEADER-ETHERNET_HEADER);
+				index += (data_size-IP_HEADER-ETHERNET_HEADER);
+				#ifdef DEBUG_MSG
+				printf("Bildgroeße (Index): %d\n", index);
+				#endif
+				// //GUI informieren
+				
 				fp = fopen("output.jpg", "w");
-				fwrite(buffer+28, data_size- sizeof udph - iph->ihl * 4, 1, fp);
+				fwrite(buffer, index, 1, fp);
+				
+				fseek(fp, 0, SEEK_END);
+				#ifdef DEBUG_MSG
+				printf("Geschriebene Bildgroeße: %d\n", ftell(fp));
+				#endif
 				
 				//GUI Aufruf
+				
+				// pixbuf = gdk_pixbuf_new_from_file_at_scale   ("output.jpg",
+                                                         // 320,
+                                                         // 240,
+                                                         // FALSE,
+                                                         // &error);
+				
 				gdk_threads_enter();
+				
+				
+														 
+				// gtk_image_set_from_pixbuf (GTK_IMAGE( data ), pixbuf);
+				
 				gtk_image_set_from_file(GTK_IMAGE( data ),"output.jpg");
 				gdk_threads_leave();
 				
 				fclose(fp);
-#ifdef DEBUG_MSG
-				printInfos(buffer, data_size);
-#endif	
+				
+				index=0;
+				#ifdef DEBUG_MSG
+				printf("Index zurueck gesetzt\n");
+				#endif
+				
 			}
+			//Es folgen weitere Pakete
+			else{
+				#ifdef DEBUG_MSG
+				printf("Erste 3 Bits des IP Offset sind NICHT 000 \n");
+				printf("IP Offset Flags: %d\n",(ntohs(iph->frag_off) & 0x1fff));
+				
+				printf("ELSE IP Packet Size: %d\n", data_size);
+				
+				//Kopieren von Paket - IP Header und Ethernet Header von rcbuffer in buffer
+				printf("Index vorm Memcpy: %d\n", index);
+				#endif
+				memcpy(buffer+index, rcbuffer+IP_HEADER+ETHERNET_HEADER , MTU-IP_HEADER-ETHERNET_HEADER);
+				index += (MTU-IP_HEADER-ETHERNET_HEADER);
+				
+				#ifdef DEBUG_MSG
+				printf("Index nach Memcpy: %d\n", index);
+				#endif
+			}
+			
+#ifdef DEBUG_MSG
+				//printInfos(buffer, data_size);
+#endif		
 		}
   
     }

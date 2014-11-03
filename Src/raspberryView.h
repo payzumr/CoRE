@@ -14,8 +14,11 @@
 
 #include <gtk/gtk.h>
 
-#define UDP_PROTO 17
-#define IP_HEADER_MAX 65536
+#define IMG_MAX 30000
+#define MTU 1514
+#define IP_HEADER sizeof(struct iphdr)
+#define ETHERNET_HEADER sizeof(struct ethhdr)
+
 #define FRONTCAM "10.10.1.11"
 #define BACKCAM "10.10.1.12"
 
