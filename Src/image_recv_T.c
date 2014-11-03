@@ -7,11 +7,12 @@
  *  Version 1.0
  */
 
-#define DEBUG_MSG
+//#define DEBUG_MSG
  
 #include "raspberryView.h"
  
 void printInfos(unsigned char *, int);
+void updateGUI(unsigned char *buffer, int index, GError *error);
  
 void recv_func(gpointer data)
 {
@@ -25,9 +26,10 @@ void recv_func(gpointer data)
 	int index=0;
     int saddr_size , data_size;
     struct sockaddr saddr;
-	FILE *fp;
-	GdkPixbuf * pixbuf;
+	//FILE *fp;
+	
 	GError    *error = NULL;
+
     
 	unsigned char *rcbuffer = (unsigned char *)malloc(MTU); //1514
     unsigned char *buffer = (unsigned char *)malloc(IMG_MAX); //Its Big! 30000
@@ -54,6 +56,7 @@ void recv_func(gpointer data)
 	}
 	
 	inet_adress = inet_addr(FRONTCAM);
+	
 
     while( TRUE )
     {
@@ -101,33 +104,27 @@ void recv_func(gpointer data)
 				#endif
 				// //GUI informieren
 				
-				fp = fopen("output.jpg", "w");
-				fwrite(buffer, index, 1, fp);
 				
-				fseek(fp, 0, SEEK_END);
-				#ifdef DEBUG_MSG
-				printf("Geschriebene Bildgroeße: %d\n", ftell(fp));
-				#endif
+				//----- Vermeiden ---/
+				//fp = fopen("output.jpg", "w");
+				//fwrite(buffer, index, 1, fp);
 				
+				//fseek(fp, 0, SEEK_END);
+				
+				//------------------//
 				//GUI Aufruf
 				
-				// pixbuf = gdk_pixbuf_new_from_file_at_scale   ("output.jpg",
-                                                         // 320,
-                                                         // 240,
-                                                         // FALSE,
-                                                         // &error);
-				
-				//gdk_threads_enter();
 				
 				
-														 
-				// gtk_image_set_from_pixbuf (GTK_IMAGE( data ), pixbuf);
+				#ifdef DEBUG_MSG
+				//printf("Geschriebene Bildgroeße: %d\n", ftell(fp));
+				#endif
 				
-				// gtk_image_set_from_file(GTK_IMAGE( data ),"output.jpg");
-				gtk_widget_queue_draw(data);
-				//gdk_threads_leave();
 				
-				fclose(fp);
+				updateGUI(buffer, index, error);
+				
+				
+				//fclose(fp);
 				
 				index=0;
 				#ifdef DEBUG_MSG
@@ -164,6 +161,19 @@ void recv_func(gpointer data)
 	close(sock_raw);
     printf("Finished");
 }
+
+void updateGUI(unsigned char *buffer, int index, GError *error){
+	GdkPixbuf * pixbuf;	
+	GdkPixbufLoader *loader;
+				
+	loader = gdk_pixbuf_loader_new ();
+	gdk_pixbuf_loader_write (loader, (guint8 *)buffer,(gsize)index, NULL);
+	pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+	gdk_threads_add_idle ((GSourceFunc) update_function, pixbuf);
+	gdk_pixbuf_loader_close(loader, &error );
+	//g_object_unref(pixbuf);
+}
+
 
 void printInfos(unsigned char *Buffer , int Size){
 	

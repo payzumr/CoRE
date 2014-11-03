@@ -22,7 +22,8 @@ typedef struct _widgetStruct {
 MyWidgets myWidgets;
 GThread   *thread;
 GError    *error = NULL;
-GdkPixbuf * pixbuf;
+GdkPixbuf * pixbuf;	
+
 
 static gpointer thread_func( gpointer data )
 {
@@ -72,33 +73,41 @@ void event_box_button_press(GtkWidget *widget,
     
 }
 
-void event_image_reload(GtkImage *image,gchar *f){
-  gtk_image_set_from_file(image,f);
-}
 
-
-gboolean update(GtkWidget *w, GdkEventExpose *event) {
-    
-	gtk_image_set_from_file(GTK_IMAGE(w),"output.jpg");
+gboolean update_function(GdkPixbuf  *pix) {
+    //g_print("Update Function called\n");
 	
-    return TRUE;
+	//gtk_image_set_from_file(image,"output.jpg");
+	
+	// pixbuf = gdk_pixbuf_new_from_file_at_scale   ("output.jpg",
+                                                         // 320,
+                                                         // 240,
+                                                         // FALSE,
+                                                         // &error);
+	
+
+
+	
+	
+	//pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+	gtk_image_set_from_pixbuf(GTK_IMAGE(myWidgets.image), pix );
+	//g_object_unref(pixbuf);
+	
+    return FALSE;
 }
 
 
 void init_widgets(MyWidgets *wi) {
   
     wi->window = gtk_window_new(GTK_WINDOW_TOPLEVEL); 
-    //gtk_window_set_title(GTK_WINDOW(wi->window),"Kamera");
 	gtk_window_set_default_size(GTK_WINDOW(wi->window),320,240);
     gtk_window_set_resizable(GTK_WINDOW(wi->window),FALSE);
-    //gtk_window_set_position(GTK_WINDOW(wi->window),GTK_WIN_POS_CENTER);
-    //gtk_widget_set_size_request(wi->window,320,240);
     
     wi->image = gtk_image_new_from_file("norecv.jpg");
 
     wi->event_box = gtk_event_box_new();
     gtk_widget_set_size_request(wi->event_box,320,240);
-	//gtk_window_fullscreen(GTK_WINDOW(wi->window));
+	gtk_window_fullscreen(GTK_WINDOW(wi->window));
 }
 
 
@@ -113,22 +122,10 @@ void create_signals(MyWidgets *wi) {
        "button-press-event",
        G_CALLBACK(event_box_button_press),
        GTK_IMAGE(wi-> image ));
-	   
-	   g_signal_connect(G_OBJECT(myWidgets.image), "update", G_CALLBACK(update),  NULL);
 }
 
 
 int main(int argc, char *argv[]) {
-
-	// /* Secure glib */
-     // if( ! g_thread_supported() )
-         // g_thread_init( NULL );
-
-	/* Secure gtk */
-   // gdk_threads_init();
-
-    /* Obtain gtk's global lock */
-    //gdk_threads_enter();
 
     gtk_init(&argc, &argv);
 
@@ -139,10 +136,6 @@ int main(int argc, char *argv[]) {
 
     create_signals(&myWidgets);
 
-    
-	
-	/* Create new thread */
-    //thread = g_thread_create( thread_func, (gpointer)image, FALSE, &error );
 	thread = g_thread_new("recv", thread_func, myWidgets.image);
 	
 		if( ! thread )
@@ -156,9 +149,6 @@ int main(int argc, char *argv[]) {
 	gtk_widget_show_all(myWidgets.window);
 	
     gtk_main();
-	
-	/* Release gtk's global lock */
-  	//gdk_threads_leave();
 
   	g_print(":::Ende der Applikation::: \n");
 

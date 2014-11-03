@@ -26,6 +26,7 @@
 
 extern GtkWidget *image;
 int inet_adress;
+gboolean update_function(GdkPixbuf *pixbuf);
 
 void recv_func(gpointer data);
 
