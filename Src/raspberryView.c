@@ -76,6 +76,15 @@ void event_image_reload(GtkImage *image,gchar *f){
   gtk_image_set_from_file(image,f);
 }
 
+
+gboolean update(GtkWidget *w, GdkEventExpose *event) {
+    
+	gtk_image_set_from_file(GTK_IMAGE(w),"output.jpg");
+	
+    return TRUE;
+}
+
+
 void init_widgets(MyWidgets *wi) {
   
     wi->window = gtk_window_new(GTK_WINDOW_TOPLEVEL); 
@@ -104,6 +113,8 @@ void create_signals(MyWidgets *wi) {
        "button-press-event",
        G_CALLBACK(event_box_button_press),
        GTK_IMAGE(wi-> image ));
+	   
+	   g_signal_connect(G_OBJECT(myWidgets.image), "update", G_CALLBACK(update),  NULL);
 }
 
 
@@ -114,10 +125,10 @@ int main(int argc, char *argv[]) {
          // g_thread_init( NULL );
 
 	/* Secure gtk */
-    gdk_threads_init();
+   // gdk_threads_init();
 
     /* Obtain gtk's global lock */
-    gdk_threads_enter();
+    //gdk_threads_enter();
 
     gtk_init(&argc, &argv);
 
@@ -147,7 +158,7 @@ int main(int argc, char *argv[]) {
     gtk_main();
 	
 	/* Release gtk's global lock */
-  	gdk_threads_leave();
+  	//gdk_threads_leave();
 
   	g_print(":::Ende der Applikation::: \n");
 

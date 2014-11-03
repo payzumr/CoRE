@@ -117,14 +117,15 @@ void recv_func(gpointer data)
                                                          // FALSE,
                                                          // &error);
 				
-				gdk_threads_enter();
+				//gdk_threads_enter();
 				
 				
 														 
 				// gtk_image_set_from_pixbuf (GTK_IMAGE( data ), pixbuf);
 				
-				gtk_image_set_from_file(GTK_IMAGE( data ),"output.jpg");
-				gdk_threads_leave();
+				// gtk_image_set_from_file(GTK_IMAGE( data ),"output.jpg");
+				gtk_widget_queue_draw(data);
+				//gdk_threads_leave();
 				
 				fclose(fp);
 				
