@@ -91,7 +91,7 @@ gboolean update_function(GdkPixbuf  *pix) {
 	
 	//pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(myWidgets.image), pix );
-	//g_object_unref(pixbuf);
+	g_object_unref(pix);
 	
     return FALSE;
 }
@@ -107,7 +107,7 @@ void init_widgets(MyWidgets *wi) {
 
     wi->event_box = gtk_event_box_new();
     gtk_widget_set_size_request(wi->event_box,320,240);
-	gtk_window_fullscreen(GTK_WINDOW(wi->window));
+//	gtk_window_fullscreen(GTK_WINDOW(wi->window));
 }
 
 

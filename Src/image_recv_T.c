@@ -20,7 +20,7 @@ void recv_func(gpointer data)
 		Gui Initialisierung
 		
 	*/
-	
+
 	int sock_raw;
 	FILE *logfile;
 	int index=0;
@@ -169,9 +169,11 @@ void updateGUI(unsigned char *buffer, int index, GError *error){
 	loader = gdk_pixbuf_loader_new ();
 	gdk_pixbuf_loader_write (loader, (guint8 *)buffer,(gsize)index, NULL);
 	pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+	g_object_ref(pixbuf);
+//	gdk_pixbuf_scale_simple(pixbuf, 320, 240, GDK_INTERP_BILINEAR  );
 	gdk_threads_add_idle ((GSourceFunc) update_function, pixbuf);
 	gdk_pixbuf_loader_close(loader, &error );
-	//g_object_unref(pixbuf);
+	g_object_unref(loader);
 }
 
 
