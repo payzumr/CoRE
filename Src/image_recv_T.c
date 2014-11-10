@@ -12,7 +12,7 @@
 #include "raspberryView.h"
  
 void printInfos(unsigned char *, int);
-void updateGUI(unsigned char *buffer, int index, GError *error);
+void updateGUI(unsigned char *buffer, int index, GError *error, gpointer data);
  
 void recv_func(gpointer data)
 {
@@ -121,7 +121,7 @@ void recv_func(gpointer data)
 				#endif
 				
 				
-				updateGUI(buffer, index, error);
+				updateGUI(buffer, index, error, data);
 				
 				
 				//fclose(fp);
@@ -162,18 +162,40 @@ void recv_func(gpointer data)
     printf("Finished");
 }
 
-void updateGUI(unsigned char *buffer, int index, GError *error){
+void updateGUI(unsigned char *buffer, int index, GError *error, gpointer data){
 	GdkPixbuf * pixbuf;	
 	GdkPixbufLoader *loader;
 				
 	loader = gdk_pixbuf_loader_new ();
 	gdk_pixbuf_loader_write (loader, (guint8 *)buffer,(gsize)index, NULL);
 	pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
-	g_object_ref(pixbuf);
-//	gdk_pixbuf_scale_simple(pixbuf, 320, 240, GDK_INTERP_BILINEAR  );
-	gdk_threads_add_idle ((GSourceFunc) update_function, pixbuf);
-	gdk_pixbuf_loader_close(loader, &error );
-	g_object_unref(loader);
+	
+	if(pixbuf!=NULL){
+		
+		g_object_ref(pixbuf);
+	
+		//Unref Loader
+		gdk_pixbuf_loader_close(loader, &error );
+		g_object_unref(loader);
+	
+		
+		//Gute Qualität - Gute Geschwindigkeit
+		//gdk_pixbuf_scale_simple(pixbuf, 320, 240, GDK_INTERP_BILINEAR  );
+		//Beste Geschwindigkeit
+		//gdk_pixbuf_scale_simple(pixbuf, 320, 240, GDK_INTERP_NEAREST);
+	
+		//betrete kritische Zone
+		gdk_threads_enter();
+	
+		gtk_image_set_from_pixbuf(GTK_IMAGE(data), pixbuf );
+	
+		//verlasse kritische Zone
+		gdk_threads_leave();
+	
+		g_object_unref(pixbuf);
+	
+		//gdk_threads_add_idle ((GSourceFunc) update_function, pixbuf);
+	}
 }
 
 

@@ -77,19 +77,6 @@ void event_box_button_press(GtkWidget *widget,
 gboolean update_function(GdkPixbuf  *pix) {
     //g_print("Update Function called\n");
 	
-	//gtk_image_set_from_file(image,"output.jpg");
-	
-	// pixbuf = gdk_pixbuf_new_from_file_at_scale   ("output.jpg",
-                                                         // 320,
-                                                         // 240,
-                                                         // FALSE,
-                                                         // &error);
-	
-
-
-	
-	
-	//pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
 	gtk_image_set_from_pixbuf(GTK_IMAGE(myWidgets.image), pix );
 	g_object_unref(pix);
 	
@@ -127,6 +114,16 @@ void create_signals(MyWidgets *wi) {
 
 int main(int argc, char *argv[]) {
 
+	// Secure glib
+    if( ! g_thread_supported() )
+         g_thread_init( NULL );
+		
+	// Secure gtk
+    gdk_threads_init();
+
+    // Obtain gtk's global lock
+    gdk_threads_enter();
+
     gtk_init(&argc, &argv);
 
     init_widgets(&myWidgets);
@@ -149,6 +146,9 @@ int main(int argc, char *argv[]) {
 	gtk_widget_show_all(myWidgets.window);
 	
     gtk_main();
+	
+	// /* Release gtk's global lock */
+  	gdk_threads_leave();
 
   	g_print(":::Ende der Applikation::: \n");
 
