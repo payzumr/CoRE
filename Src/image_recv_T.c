@@ -13,6 +13,9 @@
  
 void printInfos(unsigned char *, int);
 void updateGUI(unsigned char *buffer, int index, GError *error, gpointer data);
+
+GdkPixbuf * pixbuf;	
+GdkPixbufLoader *loader;
  
 void recv_func(gpointer data)
 {
@@ -27,7 +30,9 @@ void recv_func(gpointer data)
     int saddr_size , data_size;
     struct sockaddr saddr;
 	//FILE *fp;
-	
+    loader = gdk_pixbuf_loader_new ();
+
+    
 	GError    *error = NULL;
 
     
@@ -163,10 +168,10 @@ void recv_func(gpointer data)
 }
 
 void updateGUI(unsigned char *buffer, int index, GError *error, gpointer data){
-	GdkPixbuf * pixbuf;	
-	GdkPixbufLoader *loader;
-				
-	loader = gdk_pixbuf_loader_new ();
+//	GdkPixbuf * pixbuf;	
+//	GdkPixbufLoader *loader;
+//				
+//	loader = gdk_pixbuf_loader_new ();
 	gdk_pixbuf_loader_write (loader, (guint8 *)buffer,(gsize)index, NULL);
 	pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
 	
@@ -175,8 +180,8 @@ void updateGUI(unsigned char *buffer, int index, GError *error, gpointer data){
 		g_object_ref(pixbuf);
 	
 		//Unref Loader
-		gdk_pixbuf_loader_close(loader, &error );
-		g_object_unref(loader);
+//		gdk_pixbuf_loader_close(loader, &error );
+//		g_object_unref(loader);
 	
 		
 		//Gute Qualität - Gute Geschwindigkeit
