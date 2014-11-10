@@ -7,15 +7,18 @@
  *  Version 1.0
  */
 
-//#define DEBUG_MSG
+#define DEBUG_MSG
  
 #include "raspberryView.h"
  
 void printInfos(unsigned char *, int);
-void updateGUI(unsigned char *buffer, int index, GError *error, gpointer data);
 
-GdkPixbuf * pixbuf;	
-GdkPixbufLoader *loader;
+struct buffer{
+    unsigned char *buf;
+    int size;
+    int isUsed;
+};
+void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data);
  
 void recv_func(gpointer data)
 {
@@ -24,21 +27,44 @@ void recv_func(gpointer data)
 		
 	*/
 
+#ifdef DEBUG_MSG
+    printf("go go go...\n");
+#endif    
 	int sock_raw;
 	FILE *logfile;
 	int index=0;
     int saddr_size , data_size;
     struct sockaddr saddr;
 	//FILE *fp;
-    loader = gdk_pixbuf_loader_new ();
-
+    struct buffer bf1;
+    //bf1->buffer = (unsigned char *)malloc(IMG_MAX);
+    struct buffer bf2;
+//    bf2->buffer = malloc(IMG_MAX);
+//    struct buffer *bf3;
+//    bf3->buffer = (unsigned char *)malloc(IMG_MAX);
+    struct buffer * buffer;
+#ifdef DEBUG_MSG
+    printf("go go go...\n");
+#endif 
     
 	GError    *error = NULL;
 
     
 	unsigned char *rcbuffer = (unsigned char *)malloc(MTU); //1514
-    unsigned char *buffer = (unsigned char *)malloc(IMG_MAX); //Its Big! 30000
+    //bf1->buffer = (unsigned char *)malloc(IMG_MAX);
+    
+    unsigned char *buffer1 = (unsigned char *)malloc(IMG_MAX); //Its Big! 30000
+    
+    unsigned char *buffer2 = (unsigned char *)malloc(IMG_MAX);
 	
+    bf1.buf = buffer1;
+    bf2.buf = buffer2;
+    bf1.isUsed = 0;
+    bf2.isUsed = 0;
+    buffer = &bf1;
+    
+    
+        
      
     logfile=fopen("log.txt","w");
     if(logfile==NULL) printf("Unable to create file.");
@@ -102,7 +128,7 @@ void recv_func(gpointer data)
 				printf("IF IP Packet Size: %d\n", data_size);
 				#endif
 				
-				memcpy(buffer+index, rcbuffer+IP_HEADER+ETHERNET_HEADER , data_size-IP_HEADER-ETHERNET_HEADER);
+				memcpy(buffer->buf +index, rcbuffer+IP_HEADER+ETHERNET_HEADER , data_size-IP_HEADER-ETHERNET_HEADER);
 				index += (data_size-IP_HEADER-ETHERNET_HEADER);
 				#ifdef DEBUG_MSG
 				printf("Bildgroeße (Index): %d\n", index);
@@ -124,11 +150,27 @@ void recv_func(gpointer data)
 				#ifdef DEBUG_MSG
 				//printf("Geschriebene Bildgroeße: %d\n", ftell(fp));
 				#endif
+				buffer->size = index;
+                
+                if(!buffer->isUsed){
+				    buffer->isUsed = 1;
+                    int sizeT = buffer->size;
+                    updateGUI(buffer, sizeT, error, data);
+                    
+                    if(buffer==&bf1){
+                        buffer = &bf2;
+                    } else {
+                        buffer = &bf1;
+                    }
+                
+                }
+                printf("hallo\n");
+                
 				
-				
-				updateGUI(buffer, index, error, data);
-				
-				
+                
+                
+                
+                
 				//fclose(fp);
 				
 				index=0;
@@ -148,7 +190,7 @@ void recv_func(gpointer data)
 				//Kopieren von Paket - IP Header und Ethernet Header von rcbuffer in buffer
 				printf("Index vorm Memcpy: %d\n", index);
 				#endif
-				memcpy(buffer+index, rcbuffer+IP_HEADER+ETHERNET_HEADER , MTU-IP_HEADER-ETHERNET_HEADER);
+				memcpy(buffer->buf+index, rcbuffer+IP_HEADER+ETHERNET_HEADER , MTU-IP_HEADER-ETHERNET_HEADER);
 				index += (MTU-IP_HEADER-ETHERNET_HEADER);
 				
 				#ifdef DEBUG_MSG
@@ -167,12 +209,12 @@ void recv_func(gpointer data)
     printf("Finished");
 }
 
-void updateGUI(unsigned char *buffer, int index, GError *error, gpointer data){
-//	GdkPixbuf * pixbuf;	
-//	GdkPixbufLoader *loader;
-//				
-//	loader = gdk_pixbuf_loader_new ();
-	gdk_pixbuf_loader_write (loader, (guint8 *)buffer,(gsize)index, NULL);
+void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data){
+	GdkPixbuf * pixbuf;	
+	GdkPixbufLoader *loader;
+				
+	loader = gdk_pixbuf_loader_new ();
+	gdk_pixbuf_loader_write (loader, (guint8 *)buffer->buf,(gsize)index, NULL);
 	pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
 	
 	if(pixbuf!=NULL){
@@ -180,8 +222,8 @@ void updateGUI(unsigned char *buffer, int index, GError *error, gpointer data){
 		g_object_ref(pixbuf);
 	
 		//Unref Loader
-//		gdk_pixbuf_loader_close(loader, &error );
-//		g_object_unref(loader);
+		gdk_pixbuf_loader_close(loader, &error );
+		g_object_unref(loader);
 	
 		
 		//Gute Qualität - Gute Geschwindigkeit
@@ -201,6 +243,7 @@ void updateGUI(unsigned char *buffer, int index, GError *error, gpointer data){
 	
 		//gdk_threads_add_idle ((GSourceFunc) update_function, pixbuf);
 	}
+    buffer->isUsed = 0;
 }
 
 
