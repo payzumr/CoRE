@@ -7,7 +7,7 @@
  *  Version 1.0
  */
 
-#define DEBUG_MSG
+//#define DEBUG_MSG
  
 #include "raspberryView.h"
  
@@ -18,6 +18,7 @@ struct buffer{
     int size;
     int isUsed;
 };
+
 void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data);
  
 void recv_func(gpointer data)
@@ -43,6 +44,7 @@ void recv_func(gpointer data)
 //    struct buffer *bf3;
 //    bf3->buffer = (unsigned char *)malloc(IMG_MAX);
     struct buffer * buffer;
+	long seconds, useconds;
 #ifdef DEBUG_MSG
     printf("go go go...\n");
 #endif 
@@ -88,9 +90,14 @@ void recv_func(gpointer data)
 	
 	inet_adress = inet_addr(FRONTCAM);
 	
+	//Zeitmessung
+	struct timeval start, end; //Definierung der Variablen
+	gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes
 
     while( TRUE )
     {
+		
+		
 		saddr_size = sizeof saddr;
         //Receive a packet
         data_size = recvfrom(sock_raw , rcbuffer , MTU , 0 , &saddr ,(socklen_t *) &saddr_size);
@@ -134,22 +141,7 @@ void recv_func(gpointer data)
 				printf("Bildgroeße (Index): %d\n", index);
 				#endif
 				// //GUI informieren
-				
-				
-				//----- Vermeiden ---/
-				//fp = fopen("output.jpg", "w");
-				//fwrite(buffer, index, 1, fp);
-				
-				//fseek(fp, 0, SEEK_END);
-				
-				//------------------//
-				//GUI Aufruf
-				
-				
-				
-				#ifdef DEBUG_MSG
-				//printf("Geschriebene Bildgroeße: %d\n", ftell(fp));
-				#endif
+	
 				buffer->size = index;
                 
                 if(!buffer->isUsed){
@@ -158,25 +150,38 @@ void recv_func(gpointer data)
                     updateGUI(buffer, sizeT, error, data);
                     
                     if(buffer==&bf1){
+						//printf("Buffer 1 wurde verwendet\n");
                         buffer = &bf2;
                     } else {
+						//printf("Buffer 2 wurde verwendet\n");
                         buffer = &bf1;
                     }
                 
                 }
-                printf("hallo\n");
-                
-				
-                
-                
-                
-                
-				//fclose(fp);
 				
 				index=0;
 				#ifdef DEBUG_MSG
 				printf("Index zurueck gesetzt\n");
 				#endif
+				
+				//--------------------------------
+				//Auswertung der Zeitmessung
+				gettimeofday(&end, 0); //CPU-Zeit am Ende des Programmes
+				
+				printf("Start: %lu:%lu\n",start.tv_sec, start.tv_usec);
+				printf("Ende: %lu:%lu\n",end.tv_sec, end.tv_usec);
+				
+				seconds = end.tv_sec - start.tv_sec;
+				useconds = end.tv_usec - start.tv_usec;
+				if(useconds < 0) {
+					useconds += 1000000;
+					seconds--;
+				}   
+
+				printf("Dauer des Programms (Empfang + weitergabe an GUI):        %lu sec %lu usec\n\n", seconds, useconds);
+				gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes (neuer Durchlauf)
+				//----------------------------------
+				
 				
 			}
 			//Es folgen weitere Pakete
@@ -197,6 +202,8 @@ void recv_func(gpointer data)
 				printf("Index nach Memcpy: %d\n", index);
 				#endif
 			}
+			
+			
 			
 #ifdef DEBUG_MSG
 				//printInfos(buffer, data_size);

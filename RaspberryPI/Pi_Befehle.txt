@@ -1,0 +1,24 @@
+--------------Start------------------
+export FRAMEBUFFER=/dev/fb1 --> Ausgabe von startx auf TFT Display
+export FRAMEBUFFER=/dev/fb1 --> Ausgabe von startx auf HDMI Anschluss
+
+-------------Interface Promiscious Mode ------------------
+sudo ifconfig eth0 promisc
+
+--------------X Server -----------------------------------
+
+startx
+
+---------------- GUI --------------------------
+cd /home/pi/gui oder cd /gui
+
+make clean
+make all
+sudo ./view
+
+------------------------ Zugriff aufs PI via SSH (Putty) -------------------------------------
+Benutzer: pi
+Passwort: raspberry
+
+----------------------------File Zugriff -----------------------------------
+Cyberduck oder WinSCP
