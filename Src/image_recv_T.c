@@ -241,17 +241,17 @@ void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data){
 	gettimeofday(&startupdate, 0); //CPU-Zeit zu Beginn des Programmes
 
 	GdkPixbuf * pixbuf;	
-	// GdkPixbufLoader *loader;
+	GdkPixbufLoader *loader;
 				
-	// loader = gdk_pixbuf_loader_new ();
-	// gdk_pixbuf_loader_write (loader, (guint8 *)buffer->buf,(gsize)index, NULL);
-	// pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+	loader = gdk_pixbuf_loader_new ();
+	gdk_pixbuf_loader_write (loader, (guint8 *)buffer->buf,(gsize)index, NULL);
+	pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
 
 	printf("New from DATA\n");
 	
 	// unsigned char *imagebuf = (unsigned char *)malloc(buffer->size);
 	// memcpy(imagebuf, buffer->buf, buffer->size);
-	pixbuf=gdk_pixbuf_new_from_data(buffer->buf, GDK_COLORSPACE_RGB, FALSE, 8, 360, 360, (360*3), NULL, NULL);
+	//pixbuf=gdk_pixbuf_new_from_data(buffer->buf, GDK_COLORSPACE_RGB, FALSE, 8, 360, 360, (360*3), NULL, NULL);
 	// free(imagebuf);
 	
 	if(pixbuf!=NULL){
@@ -259,8 +259,8 @@ void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data){
 		g_object_ref(pixbuf);
 	
 		//Unref Loader
-		// gdk_pixbuf_loader_close(loader, &error );
-		// g_object_unref(loader);
+		gdk_pixbuf_loader_close(loader, &error );
+		g_object_unref(loader);
 	
 		
 		//Gute Qualität - Gute Geschwindigkeit
