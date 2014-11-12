@@ -91,7 +91,7 @@ void recv_func(gpointer data)
 	inet_adress = inet_addr(FRONTCAM);
 	
 	//Zeitmessung
-	struct timeval start, end; //Definierung der Variablen
+	struct timeval start, end, end2; //Definierung der Variablen
 	gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes
 
     while( TRUE )
@@ -128,6 +128,7 @@ void recv_func(gpointer data)
 			
 			//Einziges oder letztes Paket
 			if((ntohs(iph->frag_off) & 0x1fff) == 0){
+			
 				#ifdef DEBUG_MSG
 				printf("Erste 3 Bits des IP Offset sind 000 \n");
 				printf("IP Offset Flags: %d\n",(ntohs(iph->frag_off) & 0x1fff));
@@ -137,9 +138,25 @@ void recv_func(gpointer data)
 				
 				memcpy(buffer->buf +index, rcbuffer+IP_HEADER+ETHERNET_HEADER , data_size-IP_HEADER-ETHERNET_HEADER);
 				index += (data_size-IP_HEADER-ETHERNET_HEADER);
+				
 				#ifdef DEBUG_MSG
 				printf("Bildgroeße (Index): %d\n", index);
 				#endif
+				
+				//--------------------------------
+				//Auswertung der Zeitmessung
+				gettimeofday(&end2, 0); //CPU-Zeit am Ende des Bildempfangens
+				
+				seconds = end2.tv_sec - start.tv_sec;
+				useconds = end2.tv_usec - start.tv_usec;
+				if(useconds < 0) {
+					useconds += 1000000;
+					seconds--;
+				}   
+
+				printf("Dauer des Bildempfangs:        %lu sec %lu usec\n\n", seconds, useconds);
+				//----------------------------------
+				
 				// //GUI informieren
 	
 				buffer->size = index;
@@ -217,20 +234,33 @@ void recv_func(gpointer data)
 }
 
 void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data){
+	
+	long seconds, useconds;
+	//Zeitmessung
+	struct timeval startupdate, endupdate; //Definierung der Variablen
+	gettimeofday(&startupdate, 0); //CPU-Zeit zu Beginn des Programmes
+
 	GdkPixbuf * pixbuf;	
-	GdkPixbufLoader *loader;
+	// GdkPixbufLoader *loader;
 				
-	loader = gdk_pixbuf_loader_new ();
-	gdk_pixbuf_loader_write (loader, (guint8 *)buffer->buf,(gsize)index, NULL);
-	pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+	// loader = gdk_pixbuf_loader_new ();
+	// gdk_pixbuf_loader_write (loader, (guint8 *)buffer->buf,(gsize)index, NULL);
+	// pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+
+	printf("New from DATA\n");
+	
+	// unsigned char *imagebuf = (unsigned char *)malloc(buffer->size);
+	// memcpy(imagebuf, buffer->buf, buffer->size);
+	pixbuf=gdk_pixbuf_new_from_data(buffer->buf, GDK_COLORSPACE_RGB, FALSE, 8, 360, 360, (360*3), NULL, NULL);
+	// free(imagebuf);
 	
 	if(pixbuf!=NULL){
 		
 		g_object_ref(pixbuf);
 	
 		//Unref Loader
-		gdk_pixbuf_loader_close(loader, &error );
-		g_object_unref(loader);
+		// gdk_pixbuf_loader_close(loader, &error );
+		// g_object_unref(loader);
 	
 		
 		//Gute Qualität - Gute Geschwindigkeit
@@ -238,19 +268,33 @@ void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data){
 		//Beste Geschwindigkeit
 		//gdk_pixbuf_scale_simple(pixbuf, 320, 240, GDK_INTERP_NEAREST);
 	
-		//betrete kritische Zone
-		gdk_threads_enter();
+		// //betrete kritische Zone
+		// gdk_threads_enter();
 	
-		gtk_image_set_from_pixbuf(GTK_IMAGE(data), pixbuf );
+		// gtk_image_set_from_pixbuf(GTK_IMAGE(data), pixbuf );
 	
-		//verlasse kritische Zone
-		gdk_threads_leave();
-	
+		// //verlasse kritische Zone
+		// gdk_threads_leave();
+		printf("Bild wird an GUI Uebergeben\n");
+		gdk_threads_add_idle ((GSourceFunc) update_function, gdk_pixbuf_copy(pixbuf));
+		printf("Bild wurde an GUI Uebergeben\n");
 		g_object_unref(pixbuf);
 	
-		//gdk_threads_add_idle ((GSourceFunc) update_function, pixbuf);
 	}
     buffer->isUsed = 0;
+	
+	//--------------------------------
+	//Auswertung der Zeitmessung
+	gettimeofday(&endupdate, 0); //CPU-Zeit am Ende des Bildempfangens
+			
+	seconds = endupdate.tv_sec - startupdate.tv_sec;
+	useconds = endupdate.tv_usec - startupdate.tv_usec;
+		if(useconds < 0) {
+			useconds += 1000000;
+			seconds--;
+		}   
+	printf("Dauer des GUI Update:        %lu sec %lu usec\n\n", seconds, useconds);
+	//----------------------------------
 }
 
 
