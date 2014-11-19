@@ -22,8 +22,7 @@ typedef struct _widgetStruct {
 MyWidgets myWidgets;
 GThread   *thread;
 GError    *error = NULL;
-GdkPixbuf * pixbuf;
-GdkPixbuf * pixbuf_temp;	
+GdkPixbuf * pixbuf;	
 
 
 static gpointer thread_func( gpointer data )
@@ -78,43 +77,7 @@ void event_box_button_press(GtkWidget *widget,
 gboolean update_function(GdkPixbuf  *pix) {
     //g_print("Update Function called\n");
 	
-	//Zeitmessung
-	long seconds, useconds;
-	struct timeval start, end; //Definierung der Variablen
-	gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes
-    
-	pixbuf_temp = gdk_pixbuf_new_from_file_at_scale   ("auto3.jpg",
-                                                         320,
-                                                         240,
-                                                         FALSE,
-                                                         &error);
-	
-	gettimeofday(&end, 0); //CPU-Zeit am Ende des Bildempfangens
-		
-		seconds = end.tv_sec - start.tv_sec;
-		useconds = end.tv_usec - start.tv_usec;
-		if(useconds < 0) {
-			useconds += 1000000;
-			seconds--;
-		}   
-
-	printf("Dauer gdk_pixbuf_new_from_file_at_scale:        %lu sec %lu usec\n\n", seconds, useconds);
-	
-	gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes
-	
-														 
-	gtk_image_set_from_pixbuf(GTK_IMAGE(myWidgets.image), pixbuf_temp );
-	
-	gettimeofday(&end, 0); //CPU-Zeit am Ende des Bildempfangens
-		
-		seconds = end.tv_sec - start.tv_sec;
-		useconds = end.tv_usec - start.tv_usec;
-		if(useconds < 0) {
-			useconds += 1000000;
-			seconds--;
-		} 
-	printf("Dauer gtk_image_set_from_pixbuf:        %lu sec %lu usec\n\n", seconds, useconds);
-	//gtk_image_set_from_pixbuf(GTK_IMAGE(myWidgets.image), pix );
+	gtk_image_set_from_pixbuf(GTK_IMAGE(myWidgets.image), pix );
 	//g_object_unref(pix);
 	
     return FALSE;
@@ -127,23 +90,7 @@ void init_widgets(MyWidgets *wi) {
 	gtk_window_set_default_size(GTK_WINDOW(wi->window),320,240);
     gtk_window_set_resizable(GTK_WINDOW(wi->window),FALSE);
     
-	//Zeitmessung
-	long seconds, useconds;
-	struct timeval start, end; //Definierung der Variablen
-	gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes
     wi->image = gtk_image_new_from_file("norecv.jpg");
-	
-	gettimeofday(&end, 0); //CPU-Zeit am Ende des Bildempfangens
-		
-		seconds = end.tv_sec - start.tv_sec;
-		useconds = end.tv_usec - start.tv_usec;
-		if(useconds < 0) {
-			useconds += 1000000;
-			seconds--;
-		}   
-
-	printf("Dauer gtk_image_new_from_file:        %lu sec %lu usec\n\n", seconds, useconds);
-	
 
     wi->event_box = gtk_event_box_new();
     gtk_widget_set_size_request(wi->event_box,320,240);

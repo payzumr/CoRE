@@ -19,7 +19,7 @@ struct buffer{
     int isUsed;
 };
 
-void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data);
+void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data, OPENMAX_JPEG_DECODER *pDecoder);
  
 void recv_func(gpointer data)
 {
@@ -35,6 +35,7 @@ void recv_func(gpointer data)
 	FILE *logfile;
 	int index=0;
     int saddr_size , data_size;
+    int erster_frame = 1;
     struct sockaddr saddr;
 	//FILE *fp;
     struct buffer bf1;
@@ -55,7 +56,7 @@ void recv_func(gpointer data)
 	unsigned char *rcbuffer = (unsigned char *)malloc(MTU); //1514
     //bf1->buffer = (unsigned char *)malloc(IMG_MAX);
     
-    unsigned char *buffer1 = (unsigned char *)malloc(IMG_MAX); //Its Big! 30000
+    unsigned char *buffer1  = (unsigned char *)malloc(IMG_MAX); //Its Big! 30000
     
     unsigned char *buffer2 = (unsigned char *)malloc(IMG_MAX);
 	
@@ -65,6 +66,11 @@ void recv_func(gpointer data)
     bf2.isUsed = 0;
     buffer = &bf1;
     
+    int s;
+    OPENMAX_JPEG_DECODER *pDecoder;
+    printf("1\n");
+    bcm_host_init();
+    s = setupOpenMaxJpegDecoder(&pDecoder);
     
         
      
@@ -92,12 +98,11 @@ void recv_func(gpointer data)
 	
 	//Zeitmessung
 	struct timeval start, end, end2; //Definierung der Variablen
-	gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes
+	//gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes
 
     while( TRUE )
     {
-		IplImage* image;
-		image = cvCreateImage(cvSize(320, 240), IPL_DEPTH_8U, 3); // Bild mit 320*240
+		
 		
 		saddr_size = sizeof saddr;
         //Receive a packet
@@ -159,21 +164,13 @@ void recv_func(gpointer data)
 				//----------------------------------
 				
 				// //GUI informieren
-	
+				
 				buffer->size = index;
                 
                 if(!buffer->isUsed){
 				    buffer->isUsed = 1;
                     int sizeT = buffer->size;
-					
-					
-                    //updateGUI(buffer, sizeT, error, data);
-					
-					//Bild mit Hilfe der OpenCV Bibliothek im Fester anzeigen
-					cvShowImage("Simulator", image);
-
-					if ((cvWaitKey(5) & 255) == 27)
-						break;
+                    updateGUI(buffer, sizeT, error, data, pDecoder);
                     
                     if(buffer==&bf1){
 						//printf("Buffer 1 wurde verwendet\n");
@@ -189,9 +186,6 @@ void recv_func(gpointer data)
 				#ifdef DEBUG_MSG
 				printf("Index zurueck gesetzt\n");
 				#endif
-				
-				//Speicher freigeben
-				cvReleaseImage(&image);
 				
 				//--------------------------------
 				//Auswertung der Zeitmessung
@@ -209,12 +203,18 @@ void recv_func(gpointer data)
 
 				printf("Dauer des Programms (Empfang + weitergabe an GUI):        %lu sec %lu usec\n\n", seconds, useconds);
 				gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes (neuer Durchlauf)
+                erster_frame = 1;
 				//----------------------------------
 				
 				
 			}
 			//Es folgen weitere Pakete
 			else{
+                
+                if(erster_frame){
+                    gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes
+                    erster_frame = 0;
+                }
 				#ifdef DEBUG_MSG
 				printf("Erste 3 Bits des IP Offset sind NICHT 000 \n");
 				printf("IP Offset Flags: %d\n",(ntohs(iph->frag_off) & 0x1fff));
@@ -245,34 +245,83 @@ void recv_func(gpointer data)
     printf("Finished");
 }
 
-void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data){
+void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data, OPENMAX_JPEG_DECODER *pDecoder){
 	
 	long seconds, useconds;
+	int s;
 	//Zeitmessung
 	struct timeval startupdate, endupdate; //Definierung der Variablen
 	gettimeofday(&startupdate, 0); //CPU-Zeit zu Beginn des Programmes
 
 	GdkPixbuf * pixbuf;	
-	GdkPixbufLoader *loader;
+	//GdkPixbufLoader *loader;
 				
-	loader = gdk_pixbuf_loader_new ();
-	gdk_pixbuf_loader_write (loader, (guint8 *)buffer->buf,(gsize)index, NULL);
-	pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+	//loader = gdk_pixbuf_loader_new ();
+	//gdk_pixbuf_loader_write (loader, (guint8 *)buffer->buf,(gsize)index, NULL);
+	//pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
 
 	printf("New from DATA\n");
 	
 	// unsigned char *imagebuf = (unsigned char *)malloc(buffer->size);
 	// memcpy(imagebuf, buffer->buf, buffer->size);
-	//pixbuf=gdk_pixbuf_new_from_data(buffer->buf, GDK_COLORSPACE_RGB, FALSE, 8, 360, 360, (360*3), NULL, NULL);
+        //pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB,FALSE, 8, 360, 360);
+	//if(pixbuf == NULL){
+	//  printf("nuuuuulllllllll\n");
+	//}
+	
+	//OPENMAX_JPEG_DECODER *pDecoder;
+	//printf("1\n");
+	//bcm_host_init();
+	//s = setupOpenMaxJpegDecoder(&pDecoder);
+	//printf("2\n");
+	//char *imagebuf = (unsigned char *)malloc(buffer->size);
+	 //memcpy(imagebuf, buffer->buf, buffer->size);
+	char * outBuffer = (char *)malloc(600000);
+	s = decodeImage(pDecoder, buffer->buf, (size_t)buffer->size, outBuffer );
+	//printf("3\n");
+	
+	
+	//printf("Buffergroesse:  %d\n", sizeof(pDecoder->pOutputBufferHeader->pBuffer));
+/*
+	OMX_PARAM_PORTDEFINITIONTYPE portdef;
+
+	// need to setup the input for the resizer with the output of the
+	// decoder
+	portdef.nSize = sizeof(OMX_PARAM_PORTDEFINITIONTYPE);
+	portdef.nVersion.nVersion = OMX_VERSION;
+	portdef.nPortIndex = pDecoder->imageDecoder->outPort;
+	OMX_GetParameter(pDecoder->imageDecoder->handle,
+		     OMX_IndexParamPortDefinition, &portdef);
+
+	unsigned int    uWidth =
+	(unsigned int) portdef.format.image.nFrameWidth;
+	unsigned int    uHeight =
+	(unsigned int) portdef.format.image.nFrameHeight;
+	portSettingsChanged(pDecoder);
+	printf("W: %d --- H %d ---\n", uWidth, uHeight);
+	
+	*/
+	//portSettingsChanged(pDecoder);
+
+	pixbuf=gdk_pixbuf_new_from_data(outBuffer, GDK_COLORSPACE_RGB, FALSE, 8, 360, 360, (360*3), NULL, NULL);
 	// free(imagebuf);
+	
+	
+	
+	//gtk_image_set_from_file(GTK_IMAGE(data),"output.jpg");
+	
+	//gdk_threads_add_idle ((GSourceFunc) update_function);
+	
+	
+	
 	
 	if(pixbuf!=NULL){
 		
-		g_object_ref(pixbuf);
+		//g_object_ref(pixbuf);
 	
 		//Unref Loader
-		gdk_pixbuf_loader_close(loader, &error );
-		g_object_unref(loader);
+		//gdk_pixbuf_loader_close(loader, &error );
+		//g_object_unref(loader);
 	
 		
 		//Gute Qualität - Gute Geschwindigkeit
@@ -288,11 +337,13 @@ void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data){
 		// //verlasse kritische Zone
 		// gdk_threads_leave();
 		printf("Bild wird an GUI Uebergeben\n");
-		gdk_threads_add_idle ((GSourceFunc) update_function, gdk_pixbuf_copy(pixbuf));
+		gdk_threads_add_idle ((GSourceFunc) update_function, pixbuf);
 		printf("Bild wurde an GUI Uebergeben\n");
-		g_object_unref(pixbuf);
+		//g_object_unref(pixbuf);
 	
 	}
+	
+	
     buffer->isUsed = 0;
 	
 	//--------------------------------

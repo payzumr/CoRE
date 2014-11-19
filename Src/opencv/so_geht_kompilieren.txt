@@ -1,0 +1,7 @@
+Server:
+gcc  -Wall -g main.c header.h buffer.c -o Aufgabe1_Server -l opencv_highgui -l opencv_core -l opencv_imgproc -l pthread
+
+Client:
+gcc  -Wall -g client_recv.c -o Aufgabe1_Client -l opencv_highgui -l opencv_core -l opencv_imgproc -l pthread
+
+java  videostreamchecker.VideoStreamChecker syncdiff localhost 9999 10  

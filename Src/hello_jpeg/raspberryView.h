@@ -13,12 +13,9 @@
 #include <net/ethernet.h>
 #include <sys/time.h>
 #include <time.h>
+#include "jpeg.h"
 
-//OpenCV
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
-
-//#include <gtk/gtk.h>
+#include <gtk/gtk.h>
 
 #define IMG_MAX 30000
 #define MTU 1514
@@ -28,5 +25,12 @@
 #define FRONTCAM "10.10.1.11"
 #define BACKCAM "10.10.1.12"
 
+
+
+extern GtkWidget *image;
 int inet_adress;
+gboolean update_function(GdkPixbuf *pixbuf);
+
+void recv_func(gpointer data);
+
 

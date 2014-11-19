@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'statemachine.h'
 **
-** Created: Tue Nov 4 11:56:52 2014
+** Created: Wed Nov 19 14:50:41 2014
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.3)
 **
 ** WARNING! All changes made in this file will be lost!

@@ -18,10 +18,8 @@ struct buffer{
     int size;
     int isUsed;
 };
-
-void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data);
  
-void recv_func(gpointer data)
+void recv_func()
 {
 	/*
 		Gui Initialisierung
@@ -48,8 +46,6 @@ void recv_func(gpointer data)
 #ifdef DEBUG_MSG
     printf("go go go...\n");
 #endif 
-    
-	GError    *error = NULL;
 
     
 	unsigned char *rcbuffer = (unsigned char *)malloc(MTU); //1514
@@ -93,11 +89,18 @@ void recv_func(gpointer data)
 	//Zeitmessung
 	struct timeval start, end, end2; //Definierung der Variablen
 	gettimeofday(&start, 0); //CPU-Zeit zu Beginn des Programmes
-
-    while( TRUE )
+	
+	//Fenster öffnen zur Darstellung der Bilder
+	cvNamedWindow("Simulator", CV_WINDOW_AUTOSIZE);
+	
+	IplImage* image;
+	//image = cvCreateImage(cvSize(320, 240), IPL_DEPTH_8U, 3); // Bild mit 320*240
+	cvLoadImage("norecv.jpg",CV_LOAD_IMAGE_COLOR );
+	cvShowImage("Simulator", image);
+	cvWaitKey(0);
+	
+    while( 1 )
     {
-		IplImage* image;
-		image = cvCreateImage(cvSize(320, 240), IPL_DEPTH_8U, 3); // Bild mit 320*240
 		
 		saddr_size = sizeof saddr;
         //Receive a packet
@@ -161,6 +164,10 @@ void recv_func(gpointer data)
 				// //GUI informieren
 	
 				buffer->size = index;
+				//image = cvDecodeImage((const CvMat*) buffer->buf, CV_LOAD_IMAGE_ANYDEPTH);
+				image = cvDecodeImage((const CvMat*) buffer->buf, CV_LOAD_IMAGE_COLOR);
+				//printf("Imagesize: %d\n", image->imageSize);
+				//memcpy(buffer->buf, &image->imageData,buffer->size); 
                 
                 if(!buffer->isUsed){
 				    buffer->isUsed = 1;
@@ -190,8 +197,7 @@ void recv_func(gpointer data)
 				printf("Index zurueck gesetzt\n");
 				#endif
 				
-				//Speicher freigeben
-				cvReleaseImage(&image);
+				
 				
 				//--------------------------------
 				//Auswertung der Zeitmessung
@@ -240,101 +246,18 @@ void recv_func(gpointer data)
 		}
   
     }
+	//Speicher freigeben
+	cvReleaseImage(&image);
 	
 	close(sock_raw);
     printf("Finished");
 }
 
-void updateGUI(struct buffer *buffer, int index, GError *error, gpointer data){
-	
-	long seconds, useconds;
-	//Zeitmessung
-	struct timeval startupdate, endupdate; //Definierung der Variablen
-	gettimeofday(&startupdate, 0); //CPU-Zeit zu Beginn des Programmes
 
-	GdkPixbuf * pixbuf;	
-	GdkPixbufLoader *loader;
-				
-	loader = gdk_pixbuf_loader_new ();
-	gdk_pixbuf_loader_write (loader, (guint8 *)buffer->buf,(gsize)index, NULL);
-	pixbuf = gdk_pixbuf_loader_get_pixbuf (loader);
+int main(int argc, char *argv[]) {
 
-	printf("New from DATA\n");
-	
-	// unsigned char *imagebuf = (unsigned char *)malloc(buffer->size);
-	// memcpy(imagebuf, buffer->buf, buffer->size);
-	//pixbuf=gdk_pixbuf_new_from_data(buffer->buf, GDK_COLORSPACE_RGB, FALSE, 8, 360, 360, (360*3), NULL, NULL);
-	// free(imagebuf);
-	
-	if(pixbuf!=NULL){
-		
-		g_object_ref(pixbuf);
-	
-		//Unref Loader
-		gdk_pixbuf_loader_close(loader, &error );
-		g_object_unref(loader);
-	
-		
-		//Gute Qualität - Gute Geschwindigkeit
-		//gdk_pixbuf_scale_simple(pixbuf, 320, 240, GDK_INTERP_BILINEAR  );
-		//Beste Geschwindigkeit
-		//gdk_pixbuf_scale_simple(pixbuf, 320, 240, GDK_INTERP_NEAREST);
-	
-		// //betrete kritische Zone
-		// gdk_threads_enter();
-	
-		// gtk_image_set_from_pixbuf(GTK_IMAGE(data), pixbuf );
-	
-		// //verlasse kritische Zone
-		// gdk_threads_leave();
-		printf("Bild wird an GUI Uebergeben\n");
-		gdk_threads_add_idle ((GSourceFunc) update_function, gdk_pixbuf_copy(pixbuf));
-		printf("Bild wurde an GUI Uebergeben\n");
-		g_object_unref(pixbuf);
-	
-	}
-    buffer->isUsed = 0;
-	
-	//--------------------------------
-	//Auswertung der Zeitmessung
-	gettimeofday(&endupdate, 0); //CPU-Zeit am Ende des Bildempfangens
-			
-	seconds = endupdate.tv_sec - startupdate.tv_sec;
-	useconds = endupdate.tv_usec - startupdate.tv_usec;
-		if(useconds < 0) {
-			useconds += 1000000;
-			seconds--;
-		}   
-	printf("Dauer des GUI Update:        %lu sec %lu usec\n\n", seconds, useconds);
-	//----------------------------------
+	recv_func();
+	return 0;     //nach terminierung aller Threads terminiert main
 }
 
 
-void printInfos(unsigned char *Buffer , int Size){
-	
-	unsigned short iphdrlen;
-    
-	struct sockaddr_in source,dest;	
-    struct iphdr *iph = (struct iphdr *)Buffer;
-    iphdrlen =iph->ihl*4;
-	
-	memset(&source, 0, sizeof(source));
-    source.sin_addr.s_addr = iph->saddr;
-     
-    memset(&dest, 0, sizeof(dest));
-    dest.sin_addr.s_addr = iph->daddr;
-	
-	struct udphdr *udph = (struct udphdr*)(Buffer + iphdrlen);
-	
-	printf("###########################################################\n");
-	printf("   |-IP Header Length  : %d DWORDS or %d Bytes\n",(unsigned int)iph->ihl,((unsigned int)(iph->ihl))*4);
-	printf("   |-IP Total Length   : %d  Bytes(Size of Packet)\n",ntohs(iph->tot_len));
-	printf("   |-Source IP         : %s\n",inet_ntoa(source.sin_addr));
-    printf("   |-Destination IP    : %s\n",inet_ntoa(dest.sin_addr));
-	printf("   |-Protocol          : %d\n",(unsigned int)iph->protocol);
-	printf("   |-Source Port       : %d\n" , ntohs(udph->source));
-	printf("   |-Destination Port  : %d\n" , ntohs(udph->dest));
-	printf("   |-UDP Length        : %d\n" , ntohs(udph->len));
-	printf("###########################################################\n\n");
-	
-}
