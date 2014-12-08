@@ -1,0 +1,1 @@
+sudo LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/pi/opencv-2.4.9/release/lib ./hello_jpeg.bin

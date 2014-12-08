@@ -1,6 +1,6 @@
 --------------Start------------------
 export FRAMEBUFFER=/dev/fb1 --> Ausgabe von startx auf TFT Display
-export FRAMEBUFFER=/dev/fb1 --> Ausgabe von startx auf HDMI Anschluss
+export FRAMEBUFFER=/dev/fb0 --> Ausgabe von startx auf HDMI Anschluss
 
 -------------Interface Promiscious Mode ------------------
 sudo ifconfig eth0 promisc
