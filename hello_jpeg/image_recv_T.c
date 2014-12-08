@@ -21,6 +21,16 @@ int pictures=0;
 #endif
 int firstPacket=1;
 
+
+unsigned char[6] camMacfront = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb5};
+unsigned char[6] camMacback = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb6};
+unsigned char *camMac;
+unsigned char[6] dataMac = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb5};
+
+
+
+int checkMacAddr(unsigned char[] src, unsigned char[] value);
+
 void CallBackFunc(int event, int x, int y, int flags, void*userdata)
 {
     if(event == CV_EVENT_LBUTTONDOWN)
@@ -84,6 +94,7 @@ void recv_func()
 #endif
 	
     inet_adress = inet_addr(FRONTCAM);
+    camMac = &camMacfront;
 	
     //Zeitmessung
 #ifdef DEBUG_MSG
@@ -111,7 +122,9 @@ void recv_func()
 		}
 		#endif
 		/*--------------------Prüfung ob Paket von einer wichtigen IP kommt ----- */
-		if(iph->saddr == inet_adress)
+        
+        struct ethhdr *edh = (struct ethhdr *)rcbuffer;
+		if(checkMacAddr(edh->h_source, camMac)
 		{	
 			#ifdef DEBUG_MSG
 				struct sockaddr_in source;	
@@ -206,7 +219,8 @@ void recv_func()
 						printf("cvWaitKey\n");
 						#endif
 						//(mouseClick == 0) ? (inet_adress = inet_addr(FRONTCAM)) : (inet_adress = inet_addr(BACKCAM));
-						(mouseClick == 0) ? (inet_adress = inet_addr(FRONTCAM)) : (inet_adress = inet_addr(BACKCAM));
+						//(mouseClick == 0) ? (inet_adress = inet_addr(FRONTCAM)) : (inet_adress = inet_addr(BACKCAM)
+                        (mouseClick == 0) ? (camMac = &camMacfront) : (camMac = camMacback);
 						#ifdef DEBUG_MSG
 						printf("mouseClick\n");
 						#endif
@@ -262,10 +276,26 @@ void recv_func()
 #endif
             }	
         }
+        else if(checkMacAddr(edh->h_source, dataMac)
+        {
+            //doSomething
+        }
     }
 	
 	close(sock_raw);
     printf("Finished");
+}
+
+int checkMacAddr(unsigned char[] src, unsigned char[] value){
+    
+    int i = 0;
+    int resu = 1;
+    for (i = 0; i < 6; i++) {
+        if (src[i] != value[i]) {
+            resu = 0;
+        }
+    }
+    return resu;
 }
 
 int main(int argc, char *argv[]) 
