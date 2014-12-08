@@ -47,7 +47,7 @@ void ip_prepareHeader(ip_header* ih)
 
 void ip_setMoreFragments(ip_header* ih, bool moreFragments)
 {
-    #define FLAG_MF 0x0000
+    #define FLAG_MF 0x020
 
     if (moreFragments == true)
         ih->iph_offset |= FLAG_MF;

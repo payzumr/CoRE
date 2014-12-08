@@ -131,9 +131,9 @@ void Statemachine::run()
 	int imageLength;
 
     int send_result = 0;
-    quint16 usBytesToSend;
+    quint32 usBytesToSend;
     quint16 usEtherSize;
-    quint16 usFragmentOffset = 0;
+    quint32 usFragmentOffset = 0;
     QString result;
 
     // prepare ethernet header structures
@@ -142,6 +142,7 @@ void Statemachine::run()
 	
 	int iCount;
 	iCount = 0;
+	int pakete=0;
 
     while (true)
     {
@@ -172,7 +173,7 @@ void Statemachine::run()
 		
 		
         // usBytesToSend = procGetFrame(videoData);
-        usBytesToSend = (quint16) imageLength;
+        usBytesToSend = (quint32) imageLength;
 
         do
         {
@@ -185,6 +186,12 @@ void Statemachine::run()
                 usEtherSize = usBytesToSend;
                 usBytesToSend = 0;
                 usFragmentOffset = 0;
+				
+				//----
+				pakete++;
+				printf("Pakete gesendet: %d\n",pakete);
+				pakete=0;
+				
             }
             else
             {
@@ -193,8 +200,9 @@ void Statemachine::run()
                 // update ip header
                 ip_setMoreFragments(ptIh, true);
                 usFragmentOffset = usFragmentOffset + (MTU_SIZE / 8);
+				pakete++;
             }
-            ptIh->iph_offset |= usFragmentOffset;
+            //ptIh->iph_offset |= usFragmentOffset;
 			
             // write data
             memcpy((void*)data, (void*)(datagram + (imageLength - (usBytesToSend +usEtherSize))), usEtherSize);

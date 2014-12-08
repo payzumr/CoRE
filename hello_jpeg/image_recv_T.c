@@ -6,7 +6,7 @@
  *				Philipp Kloth 2081738
  *  Version 1.0
  */
-//#define DEBUG_MSG
+#define DEBUG_MSG
 #define IP_MF 0x2000            /* more fragments flag */
  
 #include "raspberryView.h"
@@ -22,14 +22,14 @@ int pictures=0;
 int firstPacket=1;
 
 
-unsigned char[6] camMacfront = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb5};
-unsigned char[6] camMacback = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb6};
+unsigned char camMacfront[6] = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb5};
+unsigned char camMacback[6] = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb6};
 unsigned char *camMac;
-unsigned char[6] dataMac = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb5};
+unsigned char dataMac[6] = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb5};
 
 
 
-int checkMacAddr(unsigned char[] src, unsigned char[] value);
+int checkMacAddr(unsigned char * src, unsigned char * value);
 
 void CallBackFunc(int event, int x, int y, int flags, void*userdata)
 {
@@ -105,6 +105,7 @@ void recv_func()
     /*--------------- Empfangsdauerschleife -----------*/
     while( 1 )
     {
+		
 		saddr_size = sizeof saddr;
         //Receive a packet
         data_size = recvfrom(sock_raw , rcbuffer , MTU , 0 , &saddr ,(socklen_t *) &saddr_size);
@@ -124,7 +125,7 @@ void recv_func()
 		/*--------------------Prüfung ob Paket von einer wichtigen IP kommt ----- */
         
         struct ethhdr *edh = (struct ethhdr *)rcbuffer;
-		if(checkMacAddr(edh->h_source, camMac)
+		if(checkMacAddr(&edh->h_source, camMac))
 		{	
 			#ifdef DEBUG_MSG
 				struct sockaddr_in source;	
@@ -247,7 +248,7 @@ void recv_func()
 				//----------------------------------
             }
 			//Es folgen weitere Pakete
-            else if(iph->saddr == inet_adress)
+            else
             {
 				#ifdef DEBUG_MSG
                 pakete++;
@@ -276,7 +277,7 @@ void recv_func()
 #endif
             }	
         }
-        else if(checkMacAddr(edh->h_source, dataMac)
+        else if(checkMacAddr(&edh->h_source, dataMac))
         {
             //doSomething
         }
@@ -286,11 +287,14 @@ void recv_func()
     printf("Finished");
 }
 
-int checkMacAddr(unsigned char[] src, unsigned char[] value){
+int checkMacAddr(unsigned char * src, unsigned char * value){
     
     int i = 0;
     int resu = 1;
     for (i = 0; i < 6; i++) {
+		#ifdef DEBUG_MSG
+			//printf("Source MAC: %x - Value MAC: %x\n",src[i],value[i]);
+		#endif
         if (src[i] != value[i]) {
             resu = 0;
         }
