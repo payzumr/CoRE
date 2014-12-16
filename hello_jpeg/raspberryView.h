@@ -14,9 +14,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include "jpeg.h"
-#include <pthread.h>
-#include <unistd.h> //für sleep
-
 
 //OpenCV
 #include <opencv/cv.h>

@@ -8,9 +8,6 @@
  */
 #define DEBUG_MSG
 #define IP_MF 0x2000            /* more fragments flag */
-#define THREADE(returnVal, text) if((returnVal) != 0) { errno = returnVal; perror(text);}
-#define TRUE 1
-#define FALSE 0
  
 #include "raspberryView.h"
  
@@ -23,7 +20,6 @@ char text[255];
 int pictures=0;
 #endif
 int firstPacket=1;
-int showFrontCam = 0;
 
 
 unsigned char camMacfront[6] = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb5};
@@ -31,10 +27,7 @@ unsigned char camMacback[6] = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb6};
 unsigned char *camMac;
 unsigned char dataMac[6] = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb5};
 
-pthread_mutex_t cvMutex;
-pthread_cond_t cv;
-pthread_t dummy;
-unsigned char *decodeImageBuf;
+
 
 int checkMacAddr(unsigned char * src, unsigned char * value);
 
@@ -53,7 +46,7 @@ void CallBackFunc(int event, int x, int y, int flags, void*userdata)
     }
 }
  
-void* recvBufferThread(void* notUsed)
+void recv_func()
 {
 	/* ------------------ Variablen --------------------*/
     int erster_frame = 1;	        
@@ -71,15 +64,18 @@ void* recvBufferThread(void* notUsed)
     /*---------------------Buffer malloc -----------------*/	  
     unsigned char *rcbuffer = (unsigned char *)malloc(MTU); //1514
     unsigned char *buffer = (unsigned char *)malloc(5000000); //Its Big! 30000
-    unsigned char *buffer2 = (unsigned char *)malloc(5000000);
-    unsigned char *rcImageBuf;
-
+    unsigned char * outBuffer = (char *)malloc(5000000);
     
-
+    int s;
+    OPENMAX_JPEG_DECODER *pDecoder1;
+	OPENMAX_JPEG_DECODER *pDecoder2;
 #ifdef DEBUG_MSG
     printf("Start\n");
 #endif
-
+    bcm_host_init();
+    
+    s = setupOpenMaxJpegDecoder(&pDecoder1);
+	s = setupOpenMaxJpegDecoder(&pDecoder2);
 #ifdef DEBUG_MSG
     printf("Decoder initialized\n");
 #endif
@@ -99,7 +95,7 @@ void* recvBufferThread(void* notUsed)
 	
     inet_adress = inet_addr(FRONTCAM);
     camMac = &camMacfront;
-    rcImageBuf = buffer;
+	
     //Zeitmessung
 #ifdef DEBUG_MSG
     struct timeval start, end, end2; //Definierung der Variablen
@@ -153,7 +149,7 @@ void* recvBufferThread(void* notUsed)
 				
 				#endif
 			
-				memcpy(rcImageBuf +index, rcbuffer+IP_HEADER+ETHERNET_HEADER , data_size-IP_HEADER-ETHERNET_HEADER);
+				memcpy(buffer +index, rcbuffer+IP_HEADER+ETHERNET_HEADER , data_size-IP_HEADER-ETHERNET_HEADER);
 				index += (data_size-IP_HEADER-ETHERNET_HEADER);
 				
 				#ifdef DEBUG_MSG
@@ -181,23 +177,57 @@ void* recvBufferThread(void* notUsed)
 				#endif
 				
 				//erstes Paket verwerfen, koennte unvollständig sein
-				if(firstPacket==0)
-                {
-                    decodeImageBuf = rcImageBuf;
-                    showFrontCam = (camMac = &camMacfront) ? TRUE : FALSE;
-                    pthread_cond_signal(&cv);
-                    
-                    if(rcImageBuf == buffer)
-                    {
-                        rcImageBuf = buffer2;
-                    }
-                    else
-                    {
-                        rcImageBuf = buffer;
-                    }
-                    (mouseClick == 0) ? (camMac = &camMacfront) : (camMac = camMacback);
-                    
-                
+				if(firstPacket==0){
+					
+					int s;
+					
+					#ifdef DEBUG_MSG
+					printf("Starte Decode\n");
+					#endif
+					
+					if(inet_adress == inet_addr(FRONTCAM))
+					{
+						s = decodeImage(pDecoder1, buffer, (size_t)index, outBuffer );
+					}
+					else{
+						s = decodeImage(pDecoder2, buffer, (size_t)index, outBuffer );
+					}
+					
+					#ifdef DEBUG_MSG
+					printf("Groeße nach Decode: %d\n",s);
+					#endif
+				
+					if( s > 0 )
+					{
+						printf("Bild NICHT uebersprungen\n");
+						/*-----------------------------------------------*/
+						IplImage* image;
+						image = cvCreateImageHeader(cvSize(320, 240), IPL_DEPTH_8U, 4); // Bild mit 320*240
+						image->imageData = outBuffer;
+					
+						#ifdef DEBUG_MSG
+						pictures++;
+						sprintf(text, "%d", (int)pictures);
+						cvPutText(image, text, cvPoint(280,15), &font, color);
+						#endif
+
+						cvShowImage("Simulator", image);
+						#ifdef DEBUG_MSG
+						printf("cvShowImage\n");
+						#endif
+						if ((cvWaitKey(5) & 255) == 27)	break;
+						#ifdef DEBUG_MSG
+						printf("cvWaitKey\n");
+						#endif
+						//(mouseClick == 0) ? (inet_adress = inet_addr(FRONTCAM)) : (inet_adress = inet_addr(BACKCAM));
+						//(mouseClick == 0) ? (inet_adress = inet_addr(FRONTCAM)) : (inet_adress = inet_addr(BACKCAM)
+                        (mouseClick == 0) ? (camMac = &camMacfront) : (camMac = camMacback);
+						#ifdef DEBUG_MSG
+						printf("mouseClick\n");
+						#endif
+					}
+					
+				
 				}else{
 					#ifdef DEBUG_MSG
 					printf("Erstes Bild verworfen\n");
@@ -207,6 +237,8 @@ void* recvBufferThread(void* notUsed)
 				
 				/*-------- PI JPEG Hardwaredecode---------------*/
 				
+				
+
 				//----------------------------------
 				#ifdef DEBUG_MSG
 				pakete=0;
@@ -237,7 +269,7 @@ void* recvBufferThread(void* notUsed)
                 //Kopieren von Paket - IP Header und Ethernet Header von rcbuffer in buffer
                 printf("Index vorm Memcpy: %d\n", index);
 #endif
-                memcpy(rcImageBuf+index, rcbuffer+IP_HEADER+ETHERNET_HEADER , MTU-IP_HEADER-ETHERNET_HEADER);
+                memcpy(buffer+index, rcbuffer+IP_HEADER+ETHERNET_HEADER , MTU-IP_HEADER-ETHERNET_HEADER);
                 index += (MTU-IP_HEADER-ETHERNET_HEADER);
 				
 #ifdef DEBUG_MSG
@@ -270,86 +302,8 @@ int checkMacAddr(unsigned char * src, unsigned char * value){
     return resu;
 }
 
-void* imageUpdateThread(void* notUsed){
-    
-    int s;
-    OPENMAX_JPEG_DECODER *pDecoder1;
-    OPENMAX_JPEG_DECODER *pDecoder2;
-    bcm_host_init();
-    
-    s = setupOpenMaxJpegDecoder(&pDecoder1);
-    s = setupOpenMaxJpegDecoder(&pDecoder2);
-    
-    
-    unsigned char * outBuffer = (char *)malloc(5000000);
-    
-    while(1)
-    {
-        
-        pthread_cond_wait(&cv, &cvMutex);
-        
-        int s;
-        
-#ifdef DEBUG_MSG
-        printf("Starte Decode\n");
-#endif
-        
-        if(showFrontCam)
-        {
-            s = decodeImage(pDecoder1, decodeImageBuf, (size_t)index, outBuffer );
-        }
-        else{
-            s = decodeImage(pDecoder2, decodeImageBuf, (size_t)index, outBuffer );
-        }
-        
-#ifdef DEBUG_MSG
-        printf("Groeße nach Decode: %d\n",s);
-#endif
-        
-        if( s > 0 )
-        {
-            printf("Bild NICHT uebersprungen\n");
-            /*-----------------------------------------------*/
-            IplImage* image;
-            image = cvCreateImageHeader(cvSize(320, 240), IPL_DEPTH_8U, 4); // Bild mit 320*240
-            image->imageData = outBuffer;
-            
-#ifdef DEBUG_MSG
-            pictures++;
-            sprintf(text, "%d", (int)pictures);
-            cvPutText(image, text, cvPoint(280,15), &font, color);
-#endif
-            
-            cvShowImage("Simulator", image);
-#ifdef DEBUG_MSG
-            printf("cvShowImage\n");
-#endif
-            if ((cvWaitKey(5) & 255) == 27)	break;
-#ifdef DEBUG_MSG
-            printf("cvWaitKey\n");
-#endif
-#ifdef DEBUG_MSG
-            printf("mouseClick\n");
-#endif
-        }
-        
-    }
-
-}
-
-int main(int argc, char *argv[])
+int main(int argc, char *argv[]) 
 {
-    if((pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)) !=0)
-        if((pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL)) !=0)
-        {
-            fprintf(stderr,"Fehler bei pthread_setcancelstate.......\n");
-            exit(0);
-        }
-    
-    /* Mutex Deklaration und Inistalisierung */
-    pthread_mutex_t cvMutex = PTHREAD_MUTEX_INITIALIZER;
-    pthread_cond_init (&cv, NULL);
-    
     cvNamedWindow("Simulator", CV_WINDOW_AUTOSIZE);
     cvSetMouseCallback("Simulator", CallBackFunc, NULL);
 	#ifdef DEBUG_MSG
@@ -360,17 +314,7 @@ int main(int argc, char *argv[])
     startImage  = cvLoadImage("start.jpg", CV_LOAD_IMAGE_COLOR);
     cvShowImage("Simulator", startImage);
     cvWaitKey(50);
-    
-    
-    /* Erstellen der Threads: 2 Producer, 1 Consumer, 1 Control */
-    THREADE(pthread_create( &dummy, NULL, recvBufferThread, NULL), "Error: create Thread");
-    THREADE(pthread_create( &dummy, NULL, imageUpdateThread, NULL), "Error: create Thread");
-    
-    printf("++++++++++++++++++ALLE THREADS GESTARTET++++++++++++++++++++++ \n");
-    /* Main wartet auf Abschluss des dummythreads  */
-    THREADE(pthread_join( dummy, NULL ), "Error: join Thread");
-    pthread_cond_destroy(&cv);
-    
+    recv_func();
     cvReleaseImage(&startImage);
     
     return 0;     //nach terminierung aller Threads terminiert main
