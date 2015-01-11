@@ -5,6 +5,7 @@
 #include <netinet/udp.h>   //Provides declarations for udp header
 #include <netinet/tcp.h>   //Provides declarations for tcp header
 #include <netinet/ip.h>    //Provides declarations for ip header
+#include <sys/types.h> 
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <errno.h>
@@ -23,11 +24,27 @@
 #define MTU 1514
 #define IP_HEADER sizeof(struct iphdr)
 #define ETHERNET_HEADER sizeof(struct ethhdr)
+#define RTE_FRAME sizeof(struct RTE_frame_payload)
 
 #define BACKCAM "123.123.123.123"
 #define FRONTCAM "124.124.124.124"
 
 int inet_adress;
 
+struct RTE_frame_payload 
+{
+	unsigned char unit_count;
+	unsigned char pack_id;
+	unsigned char pack_count;
+	unsigned char pack_number;
+};
 
+struct tpu 
+{
+	unsigned char encapsulation_id[4];
+	unsigned char time_stamp[4];
+	unsigned char source_bus_id;
+	unsigned char can_message_id[4];
+	unsigned char payload_length[2];
+};
 

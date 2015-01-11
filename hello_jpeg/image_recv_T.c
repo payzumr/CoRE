@@ -279,7 +279,74 @@ void recv_func()
         }
         else if(checkMacAddr(&edh->h_source, dataMac))
         {
-            //doSomething
+            //Paket wird als Ethernet geschickt (IP Header wird nicht benötigt)
+            struct RTE_frame_payload *frame = (struct RTE_frame_payload *) (rcbuffer+ETHERNET_HEADER);
+			
+			printf("unit count (Anzahl TPUs): %s\n", frame->unit_count);
+			printf("pack id(Sequenznummer): %s\n", frame->pack_id);
+			printf("pack count(Anzahl der RTE Frames): %s\n", frame->pack_count);
+			printf("pack number(Offset falls mehr als ein RTE): %s\n", frame->pack_number);
+			
+			
+			int i = frame->unit_count;
+			int offset = 0;
+			for(i,i>0;i--){
+				
+				struct tpu *can_message = (struct tpu *) (rcbuffer+ETHERNET_HEADER+RTE_FRAME+offset);
+			
+				printf("encapsulation ID: %s\n", can_message->encapsulation_id);
+				printf("time stamp: %s\n", can_message->time_stamp);
+				printf("source bus ID: %s\n", can_message->source_bus_id);
+				printf("CAN message ID: %s\n", can_message->can_message_id);
+				printf("payload byte size: %s\n", can_message->payload_length);
+				
+				//Berechnen des Offset für den nächsten durchlauf (größe TPU Nachricht)
+				offset = offset + RTE_TPU + can_message->payload_length;
+				
+				//rausschneiden der payload...
+				
+				//funktioniert noch nicht (maskieren!)
+				if(can_message->can_message_id==MSG1){
+					//VSIGNAL 16 BIT
+					//Gierrate 14 BIT
+					//VZ_Gierrate 1 BIT
+					//Stillstandsflag 1 BIT
+					//Fahrtrichtung_HR 2 BIT
+					//Fahrtrichtung_HL 2 BIT
+					//Fahrtrichtung_VR 2 BIT
+					//Fahrtrichtung_VL 2 BIT
+					//Laengsbeschleunigung 10 BIT
+					//Querbeschleunigung 8 BIT
+				}
+				else if(can_message->can_message_id==MSG2){
+					//Fahrstufe 4 BIT
+					//Zaehnezahl 8 BIT
+					//Lenkradwinkel 13 BIT
+					//VZ_Lenkradwinkel 1 BIT
+					//Reifenumfang 12 BIT
+					
+				}
+				else if(can_message->can_message_id==MSG3){
+					//Radgeschw_VR 16 BIT
+					//Radgeschw_VL 16 BIT
+					//Radgeschw_HR 16 BIT
+					//Radgeschw_HL 16 BIT
+
+				}
+				else if(can_message->can_message_id==MSG4){
+					//Wegimpuls_HR 10 BIT
+					//Wegimpuls_HL 10 BIT
+					//Wegimpuls_VR 10 BIT
+					//Wegimpuls_VL 10 BIT
+					
+				}
+			}
+}
+			
+			
+			
+			
+			
         }
     }
 	
