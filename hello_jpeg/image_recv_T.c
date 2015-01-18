@@ -25,9 +25,9 @@ int firstPacket=1;
 unsigned char camMacfront[6] = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb5};
 unsigned char camMacback[6] = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb6};
 unsigned char *camMac;
-unsigned char dataMac[6] = {0xd4, 0xbe, 0xd9, 0x69, 0xca, 0xb5};
-
-
+//Dest Mac
+unsigned char dataMac[6] = {0x03, 0x04, 0x05, 0x06, 0x02, 0x9C};
+unsigned char ethernet_can = {0x04;0x64;0x01;0x01;0x00;0x00;0x00;0x01;0x5e;0xc3;0x45;0x49;0x03;0x00;0x00;0x07;0xf1;0x00;0x08;0x00;0x00;0x14;0x40;0xff;0x7d;0xfd;0x01;0x00;0x00;0x00;0x01;0x5e;0xc3;0x4b;0xcc;0x03;0x00;0x00;0x07;0xf4;0x00;0x08;0x00;0x00;0x00;0x00;0x00;0x00;0x00;0x00;0x00;0x00;0x00;0x01;0x5e;0xc3;0x53;0xaa;0x03;0x00;0x00;0x07;0xf2;0x00;0x06;0x00;0xa6;0x07;0x2b;0xc6;0x20;0x00;0x00;0x00;0x01;0x5e;0xc3;0x5b;0x56;0x03;0x00;0x00;0x07;0xf3;0x00;0x08;0x00;0x00;0x00;0x00;0x00;0x00;0x00;0x00};
 
 int checkMacAddr(unsigned char * src, unsigned char * value);
 
@@ -290,6 +290,7 @@ void recv_func()
 			
 			int i = frame->unit_count;
 			int offset = 0;
+			//Anzahl der Durchläufe = Anzahl der TPUs
 			for(i,i>0;i--){
 				
 				struct tpu *can_message = (struct tpu *) (rcbuffer+ETHERNET_HEADER+RTE_FRAME+offset);
@@ -305,41 +306,71 @@ void recv_func()
 				
 				//rausschneiden der payload...
 				
+				char *array = malloc( sizeof(char) * ( can_message->payload_length) );
+				array = (rcbuffer+ETHERNET_HEADER+RTE_FRAME+RTE_TPU);
+				
 				//funktioniert noch nicht (maskieren!)
+				//00 00 14 40 ff 7d fd 01 hex
+				//00000000 00000000 00010100 01000000 11111111 01111101 11111101 00000001
+				//annahme: array sortierung ist: 0, 1, 2 ,... von links nach rechts
 				if(can_message->can_message_id==MSG1){
 					//VSIGNAL 16 BIT
+					unint_64 vsignal = (int) (array & 0xFFFF000000000000);
 					//Gierrate 14 BIT
+					unint_64 gierrate = (int) (array & 0x0000FFFC00000000); << 16
 					//VZ_Gierrate 1 BIT
+					unint_64 vz_gierrate = (int) (array & 0x0000000200000000);
 					//Stillstandsflag 1 BIT
+					unint_64 car_standing = (int) (array & 0x0000000100000000);
 					//Fahrtrichtung_HR 2 BIT
+					unint_64 direction_hr = (int) (array & 0x00000000C0000000);
 					//Fahrtrichtung_HL 2 BIT
+					unint_64 direction_hl = (int) (array & 0x0000000030000000);
 					//Fahrtrichtung_VR 2 BIT
+					unint_64 direction_vr = (int) (array & 0x000000000C000000);
 					//Fahrtrichtung_VL 2 BIT
+					unint_64 direction_vl = (int) (array & 0x0000000003000000);
 					//Laengsbeschleunigung 10 BIT
+					unint_64 xlenght = (int) (array & 0x0000000000FFC000);
 					//Querbeschleunigung 8 BIT
+					unint_64 ylength = (int) (array & 0x0000000000003FC0);
 				}
 				else if(can_message->can_message_id==MSG2){
 					//Fahrstufe 4 BIT
+					unint_64 fahrstufe = (int) (array & 0xF00000000000);
 					//Zaehnezahl 8 BIT
+					unint_64 zaehnezahl = (int) (array & 0x0FF000000000);
 					//Lenkradwinkel 13 BIT
+					unint_64 lenkradwinkel = (int) (array & 0x000FFF800000);
 					//VZ_Lenkradwinkel 1 BIT
+					unint_64 vz_lenkradwinkel = (int) (array & 0x000000400000);
 					//Reifenumfang 12 BIT
+					unint_64 reifenumfang = (int) (array & 0x0000003FFC00);
 					
 				}
 				else if(can_message->can_message_id==MSG3){
 					//Radgeschw_VR 16 BIT
+					unint_64 vrad_vr = (int) (array & 0xFFFF000000000000);
 					//Radgeschw_VL 16 BIT
+					unint_64 vrad_vl = (int) (array & 0x0000FFFF00000000);
 					//Radgeschw_HR 16 BIT
+					unint_64 vrad_hr = (int) (array & 0x00000000FFFF0000);
 					//Radgeschw_HL 16 BIT
+					unint_64 vrad_hl = (int) (array & 0x000000000000FFFF);
 
 				}
 				else if(can_message->can_message_id==MSG4){
 					//Wegimpuls_HR 10 BIT
+					unint_64 wegimpuls_hr = (int) (array & 0xFFC0000000000000);
 					//Wegimpuls_HL 10 BIT
+					unint_64 wegimpuls_hl = (int) (array & 0x003FF00000000000);
 					//Wegimpuls_VR 10 BIT
+					unint_64 wegimpuls_vr = (int) (array & 0x00000FFC00000000);
 					//Wegimpuls_VL 10 BIT
-					
+					unint_64 wegimpuls_vl = (int) (array & 0x00000003FF000000);
 				}
+				
+				free(array);
 			}
 }
 			
